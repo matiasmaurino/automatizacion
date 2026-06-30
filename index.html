@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; }
+    html { width: 100%; overflow-x: hidden; }
+    body {
+      font-family: Arial, sans-serif;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 16px 12px;
+      color: #222;
+      overflow-x: hidden;
+    }
+    h2 { color: #673ab7; font-size: 20px; }
+    .paso { display: none; width: 100%; }
+    .paso.activo { display: block; }
+    label { display: block; margin-top: 14px; font-weight: bold; font-size: 13px; }
+    input, select {
+      display: block;
+      width: 100%;
+      padding: 10px 8px;
+      margin-top: 4px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      display: block;
+      margin-top: 20px;
+      padding: 12px 10px;
+      background: #673ab7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 15px;
+      width: 100%;
+    }
+    button.secundario { background: #999; margin-top: 8px; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .error { color: #c62828; margin-top: 10px; font-size: 13px; word-break: break-word; }
+    .info {
+      background: #f3e5f5;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 13px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .opciones-radio label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; }
+    .opciones-radio input { width: auto; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <h2>Facturación ARCA</h2>
+
+  <div class="paso activo" id="paso1">
+    <label>Escribí tu DNI</label>
+    <input type="text" id="dniCliente" placeholder="Ej: 30123456">
+    <div class="error" id="error1"></div>
+    <button onclick="paso1_buscar()">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso1b">
+    <label>Encontramos varias coincidencias, elegí la tuya:</label>
+    <select id="selectCliente"></select>
+    <button onclick="paso1b_confirmar()">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso2">
+    <div class="info" id="infoCliente"></div>
+    <label>Escribí el DNI del paciente</label>
+    <input type="text" id="dniPaciente" placeholder="Ej: 9603102128">
+    <div class="error" id="error2"></div>
+    <button onclick="paso2_buscar()">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso3">
+    <div class="info" id="infoPaciente"></div>
+    <label>¿Qué prestación es?</label>
+    <select id="selectServicio"></select>
+    <button onclick="mostrarPaso(4)">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso4">
+    <label>Mes de la prestación</label>
+    <select id="selectMes"></select>
+    <button onclick="mostrarPaso(5)">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso5">
+    <label>¿Cuántas horas trabajó?</label>
+    <input type="number" id="horas" min="1">
+    <button onclick="cargarCuitsReceptor(); mostrarPaso(6)">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso6">
+    <label>¿A quién le facturás?</label>
+    <select id="selectCuitReceptor"></select>
+    <button type="button" class="secundario" onclick="cargarTodosCuits()">Otro CUIT</button>
+    <button onclick="paso6_continuar()">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso7">
+    <label>Elegí el número de trámite</label>
+    <div id="opcionesTramite" class="opciones-radio"></div>
+    <button onclick="mostrarPaso(8)">Continuar</button>
+  </div>
+
+  <div class="paso" id="paso8">
+    <h3>Confirmá los datos</h3>
+    <div class="info" id="resumenFinal"></div>
+    <div class="error" id="error8"></div>
+    <button onclick="enviar()" id="btnEnviar">Confirmar y enviar</button>
+  </div>
+
+  <div class="paso" id="paso9">
+    <h3>✅ ¡Listo!</h3>
+    <div class="info" id="resultadoOk"></div>
+  </div>
+
+<script>
+  const estado = {
+    candidatosCliente: [],
+    cliente: null,
+    paciente: null,
+    servicio: null,
+    mesNumero: null,
+    anio: null,
+    horas: null,
+    cuitReceptor: null,
+    numeroTramite: null
+  };
+
+  function mostrarPaso(n) {
+    document.querySelectorAll('.paso').forEach(p => p.classList.remove('activo'));
+    document.getElementById('paso' + n).classList.add('activo');
+  }
+
+  function paso1_buscar() {
+    const dni = document.getElementById('dniCliente').value.trim();
+    document.getElementById('error1').textContent = '';
+    if (!dni) { document.getElementById('error1').textContent = 'Ingresá tu DNI.'; return; }
+
+    google.script.run
+      .withSuccessHandler(function (resultados) {
+        if (!resultados || resultados.length === 0) {
+          document.getElementById('error1').textContent = 'No encontramos ese DNI. Revisalo e intentá de nuevo.';
+          return;
+        }
+        estado.candidatosCliente = resultados;
+        if (resultados.length === 1) {
+          estado.cliente = resultados[0];
+          irAPaso2();
+        } else {
+          const sel = document.getElementById('selectCliente');
+          sel.innerHTML = '';
+          resultados.forEach((c, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = c.cliente + ' (CUIT ' + c.cuit + ')';
+            sel.appendChild(opt);
+          });
+          mostrarPaso('1b');
+        }
+      })
+      .withFailureHandler(function (err) {
+        document.getElementById('error1').textContent = err.message;
+      })
+      .buscarClientePorDni(dni);
+  }
+
+  function paso1b_confirmar() {
+    const idx = document.getElementById('selectCliente').value;
+    estado.cliente = estado.candidatosCliente[idx];
+    irAPaso2();
+  }
+
+  function irAPaso2() {
+    document.getElementById('infoCliente').textContent =
+      'Cliente: ' + estado.cliente.cliente + ' — CUIT ' + estado.cliente.cuit;
+    mostrarPaso(2);
+  }
+
+  function paso2_buscar() {
+    const dni = document.getElementById('dniPaciente').value.trim();
+    document.getElementById('error2').textContent = '';
+    if (!dni) { document.getElementById('error2').textContent = 'Ingresá el DNI del paciente.'; return; }
+
+    google.script.run
+      .withSuccessHandler(function (p) {
+        if (!p) {
+          document.getElementById('error2').textContent = 'No encontramos ese paciente para este cliente.';
+          return;
+        }
+        estado.paciente = p;
+        document.getElementById('infoPaciente').textContent =
+          'Paciente: ' + p.nombre + ' (DNI ' + p.dni + ', ' + p.estado + ')';
+        cargarServicios();
+        cargarMeses();
+        cargarCuitsReceptor();
+        mostrarPaso(3);
+      })
+      .withFailureHandler(function (err) {
+        document.getElementById('error2').textContent = err.message;
+      })
+      .buscarPacientePorDni(estado.cliente.fila, dni);
+  }
+
+  function cargarServicios() {
+    google.script.run.withSuccessHandler(function (lista) {
+      const sel = document.getElementById('selectServicio');
+      sel.innerHTML = '';
+      lista.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        sel.appendChild(opt);
+      });
+    }).listarServicios();
+  }
+  document.getElementById('selectServicio') && (document.getElementById('selectServicio').onchange = function () {
+    estado.servicio = this.value;
+  });
+
+  function cargarMeses() {
+    const sel = document.getElementById('selectMes');
+    sel.innerHTML = '';
+    const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const hoy = new Date();
+    for (let i = 18; i >= -3; i--) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+      const opt = document.createElement('option');
+      opt.value = (d.getMonth() + 1) + '-' + d.getFullYear();
+      opt.textContent = nombres[d.getMonth()] + ' ' + d.getFullYear();
+      sel.appendChild(opt);
+    }
+    sel.selectedIndex = sel.options.length - 4;
+  }
+
+  function paso6_continuar() {
+    estado.servicio = document.getElementById('selectServicio').value;
+    const [mes, anio] = document.getElementById('selectMes').value.split('-');
+    estado.mesNumero = Number(mes);
+    estado.anio = Number(anio);
+    estado.horas = document.getElementById('horas').value;
+    estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
+
+    if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
+      const cont = document.getElementById('opcionesTramite');
+      cont.innerHTML = '';
+      estado.paciente.tramites.forEach((t, i) => {
+        const id = 'tramite_' + i;
+        cont.innerHTML += '<label><input type="radio" name="tramite" id="' + id + '" value="' + t + '" ' + (i === 0 ? 'checked' : '') + '> ' + t + '</label>';
+      });
+      mostrarPaso(7);
+    } else {
+      estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
+      irAResumen();
+    }
+  }
+
+  function cargarCuitsReceptor() {
+    google.script.run.withSuccessHandler(function (lista) {
+      pintarCuits(lista);
+    }).listarCuitsReceptor(estado.cliente ? estado.cliente.fila : null);
+  }
+
+  function cargarTodosCuits() {
+    google.script.run.withSuccessHandler(function (lista) {
+      pintarCuits(lista);
+    }).listarTodosLosCuitsReceptor();
+  }
+
+  function pintarCuits(lista) {
+    const sel = document.getElementById('selectCuitReceptor');
+    sel.innerHTML = '';
+    lista.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c === '30628249527' ? 'IOMA (30628249527)' : c;
+      sel.appendChild(opt);
+    });
+  }
+
+  function irAResumen() {
+    if (!estado.numeroTramite) {
+      const radio = document.querySelector('input[name="tramite"]:checked');
+      estado.numeroTramite = radio ? radio.value : '';
+    }
+    const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('resumenFinal').innerHTML =
+      'Cliente: ' + estado.cliente.cliente + '<br>' +
+      'Paciente: ' + estado.paciente.nombre + ' (DNI ' + estado.paciente.dni + ')<br>' +
+      'Servicio: ' + estado.servicio + '<br>' +
+      'Período: ' + nombresMes[estado.mesNumero - 1] + ' ' + estado.anio + '<br>' +
+      'Horas: ' + estado.horas + '<br>' +
+      'Se factura a CUIT: ' + estado.cuitReceptor + '<br>' +
+      'N° de trámite: ' + estado.numeroTramite;
+    mostrarPaso(8);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.querySelector('#paso7 button');
+    if (btn) btn.onclick = irAResumen;
+  });
+
+  function enviar() {
+    document.getElementById('error8').textContent = '';
+    document.getElementById('btnEnviar').disabled = true;
+
+    const payload = {
+      cuit: estado.cliente.cuit,
+      claveAfip: estado.cliente.claveAfip,
+      clienteNombre: estado.cliente.cliente,
+      pacienteNombre: estado.paciente.nombre,
+      numeroAfiliado: estado.paciente.numeroAfiliado,
+      estado: estado.paciente.estado,
+      dniPaciente: estado.paciente.dni,
+      numeroTramite: estado.numeroTramite,
+      servicio: estado.servicio,
+      mesNumero: estado.mesNumero,
+      anio: estado.anio,
+      horas: estado.horas,
+      cuitReceptor: estado.cuitReceptor
+    };
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        document.getElementById('resultadoOk').innerHTML =
+          document.getElementById('resumenFinal').innerHTML +
+          '<hr>' +
+          'Valor hora: $' + res.valorHora + '<br>' +
+          'Resolución: ' + res.resolucion;
+        mostrarPaso(9);
+      })
+      .withFailureHandler(function (err) {
+        document.getElementById('error8').textContent = err.message;
+        document.getElementById('btnEnviar').disabled = false;
+      })
+      .guardarFactura(payload);
+  }
+</script>
+</body>
+</html>
