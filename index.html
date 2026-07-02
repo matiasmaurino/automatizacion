@@ -5,11 +5,10 @@
   <meta charset="utf-8">
   <style>
     body { font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; color: #222; position: relative; padding-bottom: 80px; }
-    h2 { color: #333; font-size: 22px; margin-bottom: 4px; }
+    h2 { color: #333; font-size: 22px; margin-bottom: 4px; text-align: center; }
     h3 { color: #333; font-size: 18px; margin: 0 0 14px; }
-    .sub { color: #666; margin-bottom: 24px; font-size: 14px; }
+    .sub { color: #666; margin-bottom: 24px; font-size: 14px; text-align: center; }
     
-    /* Banner de validaciones superiores */
     .banner-validacion {
       background: #f5f5f5;
       border-left: 4px solid #666;
@@ -18,11 +17,12 @@
       font-size: 13px;
       margin-bottom: 16px;
       word-break: break-word;
+      text-align: left;
     }
 
-    label { display: block; margin-top: 16px; font-weight: bold; font-size: 14px; }
+    label { display: block; margin-top: 16px; font-weight: bold; font-size: 14px; text-align: left; }
     input[type=text], input[type=number], select {
-      width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px;
+      width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px;
     }
 
     .fila-mes { display: flex; align-items: flex-end; gap: 10px; margin-top: 14px; }
@@ -32,7 +32,7 @@
     .chk-retro span { font-size: 13px; font-weight: bold; }
 
     #bloqueRetroactivo { display: none; margin-top: 12px; }
-    .caja-retro { border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px; background: #fafafa; }
+    .caja-retro { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; background: #fafafa; }
     .caja-retro p { margin: 0 0 8px; font-size: 13px; color: #444; }
     
     .factura-mini { border: 1px solid #ccc; border-radius: 4px; padding: 8px 10px; background: #fff; margin: 8px 0; font-size: 13px; }
@@ -43,26 +43,21 @@
     .fila-ptos { display: flex; gap: 8px; margin-top: 4px; }
     .fila-ptos > div { flex: 1; }
 
-    /* Botones de acción estilo GRIS OPCION */
+    /* Botones de acción estilo GRIS CLÁSICO de opcion.html */
     .botones { display: flex; gap: 8px; margin-top: 24px; }
-    .btn { padding: 10px 18px; font-size: 16px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; background: #f8f8f8; color: #222; width: auto; }
+    .btn { display: block; width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; cursor: pointer; border: 1px solid #ccc; border-radius: 8px; background: #f8f8f8; color: #222; }
     .btn:hover { background: #eee; }
     .btn:disabled { background: #e0e0e0 !important; color: #888; cursor: not-allowed; }
 
-    /* Botón Cerrar Violeta abajo a la derecha */
-    .contenedor-cerrar { display: flex; justify-content: flex-end; margin-top: 30px; width: 100%; }
-    .btn-cerrar { background: #673ab7; color: white; padding: 10px 20px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .btn-cerrar:hover { background: #5e35b1; }
-
-    .error { color: #b00020; margin-top: 12px; font-size: 14px; }
-    .info { background: #f9f9f9; padding: 14px; border-radius: 4px; margin-top: 14px; border: 1px solid #ccc; }
+    .error { color: #b00020; margin-top: 12px; font-size: 14px; text-align: left; }
+    .info { background: #ffffff; padding: 14px; border-radius: 6px; margin-top: 14px; border: 1px solid #ccc; text-align: left; }
     
     .resumen-fila { padding: 6px 0; border-bottom: 1px solid #eee; font-size: 14px; display: flex; justify-content: space-between; }
     .resumen-fila:last-child { border-bottom: none; }
     .resumen-label { font-weight: bold; color: #333; }
     .resumen-valor { text-align: right; max-width: 60%; word-break: break-all; }
 
-    .importe-box { background: #f5f5f5; color: #222; border: 1px solid #ccc; border-radius: 4px; padding: 12px; margin-top: 14px; text-align: center; }
+    .importe-box { background: #f5f5f5; color: #222; border: 1px solid #ccc; border-radius: 6px; padding: 12px; margin-top: 14px; text-align: center; }
     .importe-box .imp-label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #555; }
     .importe-box .imp-valor { font-size: 24px; font-weight: bold; margin-top: 4px; }
     
@@ -72,7 +67,6 @@
 </head>
 <body>
 
-<!-- PASO 1: DNI Solicitante -->
 <div class="paso activo" id="paso1">
   <h2>Facturación ARCA</h2>
   <div class="sub">Escribí tu DNI para comenzar el proceso de facturación.</div>
@@ -84,7 +78,6 @@
   </div>
 </div>
 
-<!-- PASO 1b: Múltiples Solicitantes -->
 <div class="paso" id="paso1b">
   <h2>Facturación ARCA</h2>
   <div class="sub">Se encontró más de un cliente registrado. Elegí el correcto:</div>
@@ -96,7 +89,6 @@
   </div>
 </div>
 
-<!-- PASO 2: DNI Paciente -->
 <div class="paso" id="paso2">
   <h2>Validación de Paciente</h2>
   <div id="bannerSolicitante" class="banner-validacion"></div>
@@ -109,13 +101,15 @@
   </div>
 </div>
 
-<!-- PASO 3: Formulario Combinado -->
 <div class="paso" id="paso3">
   <h2>Datos de la Prestación</h2>
   <div id="bannerValidacionCruzada" class="banner-validacion"></div>
   
   <label>¿Qué prestación es?</label>
   <select id="selectServicio"></select>
+
+  <label id="labelTramite">¿Qué número de trámite es?</label>
+  <select id="selectTramite"></select>
 
   <div class="fila-mes">
     <div class="campo-mes">
@@ -166,38 +160,24 @@
   </div>
 </div>
 
-<!-- PASO 4: Selección de Trámite -->
-<div class="paso" id="paso4">
-  <h2>Número de Trámite</h2>
-  <div id="opcionesTramite" style="margin-top:8px"></div>
-  <div class="botones">
-    <button class="btn" onclick="mostrarPaso(3)">Volver</button>
-    <button class="btn" onclick="paso4_confirmar()">Continuar</button>
-  </div>
-</div>
-
-<!-- PASO 5: Vista Previa / Confirmación -->
 <div class="paso" id="paso5">
   <h2>Confirmá los datos</h2>
   <div id="resumenFinal"></div>
   <div id="boxCalculosM"></div>
   <div class="error" id="error5"></div>
   <div class="botones">
-    <button class="btn" id="btnVolver5" onclick="volverDesdePaso5()">Volver</button>
+    <button class="btn" id="btnVolver5" onclick="mostrarPaso(3)">Volver</button>
     <button class="btn" id="btnEnviar" onclick="enviar()">Confirmar y enviar</button>
   </div>
 </div>
 
-<!-- PASO 6: Éxito Final -->
 <div class="paso" id="paso6">
   <h2>¡Pedido Confirmado!</h2>
-  <div class="info" style="background: #e8f5e9; border: 1px solid #2e7d32; color: #2e7d32; font-size: 15px; font-weight: bold;">
+  <div class="info" style="background: #e8f5e9; border: 1px solid #2e7d32; color: #2e7d32; font-size: 15px; font-weight: bold; text-align: center;">
     Recorda que te vamos a enviar por email la Factura, CAE y credencial de pago.
   </div>
   <div id="resumenOk" style="margin-top: 12px;"></div>
 </div>
-
-
 
 <script>
   const estado = {
@@ -213,7 +193,6 @@
     retroactivo: false,
     puntoVenta: null,
     nroComprobante: null,
-    vieneDePaso4: false,
     valoresCalculados: null
   };
 
@@ -299,8 +278,10 @@
           `👤 Paciente: ${estado.paciente.nombre} (DNI ${estado.paciente.dni})`;
           
         cargarServiciosDinamicos(); 
+        cargarTramitesDinamicos(); 
         cargarMeses();
         cargarCuitsReceptor();
+        document.getElementById('vencimientoTramiteInput').value = res[0].vencimientoTramiteK || 'No registra';
         mostrarPaso(3);
       })
       .withFailureHandler(function(err) {
@@ -320,6 +301,25 @@
         sel.appendChild(opt);
       });
     }).listarServiciosUnicosCliente(estado.cliente.fila);
+  }
+
+  function cargarTramitesDinamicos() {
+    const sel = document.getElementById('selectTramite');
+    const label = document.getElementById('labelTramite');
+    sel.innerHTML = '';
+    
+    if (estado.paciente.tramites && estado.paciente.tramites.length > 0) {
+      label.style.display = 'block';
+      sel.style.display = 'block';
+      estado.paciente.tramites.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        sel.appendChild(opt);
+      });
+    } else {
+      label.style.display = 'none';
+      sel.style.display = 'none';
+    }
   }
 
   function cargarMeses() {
@@ -379,155 +379,131 @@
   }
 
   function paso3_continuar() {
-  document.getElementById('error3').textContent = '';
-  const esRetro = document.getElementById('esRetroactivo').checked;
-  const horas = document.getElementById('horas').value;
-  const [mes, anio] = document.getElementById('selectMes').value.split('-');
+    document.getElementById('error3').textContent = '';
+    const esRetro = document.getElementById('esRetroactivo').checked;
+    const horas = document.getElementById('horas').value;
+    const [mes, anio] = document.getElementById('selectMes').value.split('-');
 
-  if (!horas || Number(horas) < 1) {
-    document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
-  }
-  if (esRetro) {
-    const pv = document.getElementById('puntoVenta').value;
-    const nc = document.getElementById('nroComprobante').value;
-    if (!pv || !nc) {
-      document.getElementById('error3').textContent = 'Completá el Punto de Venta y el Número de Comprobante.'; return;
+    if (!horas || Number(horas) < 1) {
+      document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
     }
-    estado.puntoVenta = pv;
-    estado.nroComprobante = nc;
-    estado.cuitReceptor = '30628249527';
-  } else {
-    estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
-  }
-
-  estado.servicio = document.getElementById('selectServicio').value;
-  estado.mesNumero = Number(mes);
-  estado.anio = Number(anio);
-  estado.horas = horas;
-  estado.retroactivo = esRetro;
-
-  const nombresMeses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  
-  google.script.run
-    .withSuccessHandler(function(dataValores) {
-      if (!dataValores) {
-        document.getElementById('error3').textContent = 'Error: No se encontraron tarifas para este periodo en TABLAS AUX.';
-        return;
+    if (esRetro) {
+      const pv = document.getElementById('puntoVenta').value;
+      const nc = document.getElementById('nroComprobante').value;
+      if (!pv || !nc) {
+        document.getElementById('error3').textContent = 'Completá el Punto de Venta y el Número de Comprobante.'; return;
       }
-      estado.valoresCalculados = dataValores;
+      estado.puntoVenta = pv;
+      estado.nroComprobante = nc;
+      estado.cuitReceptor = '30628249527';
+    } else {
+      estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
+    }
 
-      if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
-        const cont = document.getElementById('opcionesTramite');
-        cont.innerHTML = '<h3>Elegí el número de trámite</h3>';
-        estado.paciente.tramites.forEach((t, i) => {
-          cont.innerHTML += `<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal;"><input type="radio" name="tramite" value="${t}" ${i===0?'checked':''}> ${t}</label>`;
-        });
-        estado.vieneDePaso4 = true;
-        
-        // 🟢 CORREGIDO ACÁ: Ahora dice mostrarPaso y va a avanzar sin trabarse
-        mostrarPaso(4);
-      } else {
-        estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
-        estado.vieneDePaso4 = false;
+    estado.servicio = document.getElementById('selectServicio').value;
+    
+    const selTr = document.getElementById('selectTramite');
+    estado.numeroTramite = selTr.style.display !== 'none' ? selTr.value : '';
+
+    estado.mesNumero = Number(mes);
+    estado.anio = Number(anio);
+    estado.horas = horas;
+    estado.retroactivo = esRetro;
+
+    const nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    
+    google.script.run
+      .withSuccessHandler(function(dataValores) {
+        if (!dataValores) {
+          document.getElementById('error3').textContent = 'Error: No se encontraron tarifas para este periodo en TABLAS AUX.';
+          return;
+        }
+        estado.valoresCalculados = dataValores;
         armarResumenConfirmacion();
-        mostrarPaso(5);
-      }
-    })
-    .withFailureHandler(function(err) {
-       document.getElementById('error3').textContent = err.message;
-    })
-    .obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1], estado.anio);
-}
-
-  // ---- PASO 4 ----
-  function paso4_confirmar() {
-    const radio = document.querySelector('input[name="tramite"]:checked');
-    estado.numeroTramite = radio ? radio.value : '';
-    armarResumenConfirmacion();
-    mostrarPaso(5);
-  }
-
-  function volverDesdePaso5() {
-    mostrarPaso(estado.vieneDePaso4 ? 4 : 3);
+        mostrarPaso(5); 
+      })
+      .withFailureHandler(function(err) {
+         document.getElementById('error3').textContent = err.message;
+      })
+      .obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1], estado.anio);
   }
 
   // ---- Vista Previa de Confirmación (Paso 5) ----
   function armarResumenConfirmacion() {
-  const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  
-  let html = `
-    <div class="resumen-fila"><div class="resumen-label">Cliente</div><div class="resumen-valor">${estado.cliente.cliente}</div></div>
-    <div class="resumen-fila"><div class="resumen-label">CUIT</div><div class="resumen-valor">${estado.cliente.cuit}</div></div>
-    <div class="resumen-fila"><div class="resumen-label">Paciente</div><div class="resumen-valor">${estado.paciente.nombre}</div></div>
-    <div class="resumen-fila"><div class="resumen-label">Prestación</div><div class="resumen-valor">${estado.servicio}</div></div>
-    <div class="resumen-fila"><div class="resumen-label">Período</div><div class="resumen-valor">${nombres[estado.mesNumero-1]} ${estado.anio}</div></div>
-    <div class="resumen-fila"><div class="resumen-label">Horas</div><div class="resumen-valor">${estado.horas}</div></div>
-    <div class="resumen-fila"><div class="resumen-label">Se factura a</div><div class="resumen-valor">${estado.cuitReceptor === '30628249527' ? 'IOMA (30628249527)' : estado.cuitReceptor}</div></div>
-  `;
-  
-  if (estado.numeroTramite) {
-    html += `<div class="resumen-fila"><div class="resumen-label">N° trámite</div><div class="resumen-valor">${estado.numeroTramite}</div></div>`;
+    const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    
+    // 1. Datos básicos recopilados
+    let html = `
+      <div class="resumen-fila"><div class="resumen-label">Cliente</div><div class="resumen-valor">${estado.cliente.cliente}</div></div>
+      <div class="resumen-fila"><div class="resumen-label">CUIT</div><div class="resumen-valor">${estado.cliente.cuit}</div></div>
+      <div class="resumen-fila"><div class="resumen-label">Paciente</div><div class="resumen-valor">${estado.paciente.nombre}</div></div>
+      <div class="resumen-fila"><div class="resumen-label">Prestación</div><div class="resumen-valor">${estado.servicio}</div></div>
+      <div class="resumen-fila"><div class="resumen-label">Período</div><div class="resumen-valor">${nombres[estado.mesNumero-1]} ${estado.anio}</div></div>
+      <div class="resumen-fila"><div class="resumen-label">Horas</div><div class="resumen-valor">${estado.horas}</div></div>
+      <div class="resumen-fila"><div class="resumen-label">Se factura a</div><div class="resumen-valor">${estado.cuitReceptor === '30628249527' ? 'IOMA (30628249527)' : estado.cuitReceptor}</div></div>
+    `;
+    
+    if (estado.numeroTramite) {
+      html += `<div class="resumen-fila"><div class="resumen-label">N° trámite</div><div class="resumen-valor">${estado.numeroTramite}</div></div>`;
+    }
+    if (estado.retroactivo) {
+      html += `<div class="resumen-fila"><div class="resumen-label">Retroactivo</div><div class="resumen-valor">Pto Vta: ${estado.puntoVenta} / Comp: ${estado.nroComprobante}</div></div>`;
+    }
+
+    // 2. Cálculos de tarifas obtenidos del backend
+    const valorHoraFinal = estado.retroactivo ? estado.valoresCalculados.valorHoraM : estado.valoresCalculados.valorHora;
+    const totalCalculado = (Number(valorHoraFinal) * Number(estado.horas)).toLocaleString('es-AR');
+
+    // 3. Unificamos todo el contenido dentro del contenedor 'resumenFinal' que SÍ existe de forma nativa
+    html += `
+      <div class="info" style="margin-top:10px; background:#fafafa; border-top:1px solid #ccc; padding-top:8px;">
+        <div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">${estado.valoresCalculados.resolucion || 'No especificada'}</div></div>
+        <div class="resumen-fila"><div class="resumen-label">Valor de la Hora</div><div class="resumen-valor">$${valorHoraFinal}</div></div>
+        <div class="resumen-fila"><div class="resumen-label">Vencimiento N° Trámite</div><div class="resumen-valor">${estado.cliente.vencimientoTramiteK || 'No registra'}</div></div>
+      </div>
+      <div class="importe-box" style="background:#673ab7; color:#fff; padding:10px; border-radius:4px; text-align:center; margin-top:10px;">
+        <div style="font-size:12px; uppercase;">Importe Total Facturado</div>
+        <div style="font-size:22px; font-weight:bold;">$${totalCalculado}</div>
+      </div>
+    `;
+
+    document.getElementById('resumenFinal').innerHTML = `<div class="info" style="padding:4px 12px; background:#fff;">${html}</div>`;
   }
-  if (estado.retroactivo) {
-    html += `<div class="resumen-fila"><div class="resumen-label">Retroactivo</div><div class="resumen-valor">Pto Vta: ${estado.puntoVenta} / Comp: ${estado.nroComprobante}</div></div>`;
+
+  function enviar() {
+    document.getElementById('error5').textContent = '';
+    document.getElementById('btnEnviar').disabled = true;
+    
+    const payload = {
+      cuit:                estado.cliente.cuit,
+      claveAfip:           estado.cliente.claveAfip,
+      clienteNombre:       estado.cliente.cliente,
+      pacienteNombre:      estado.paciente.nombre,
+      numeroAfiliado:      estado.paciente.numeroAfiliado,
+      vencimientoTramiteK: estado.cliente.vencimientoTramiteK || 'No registra',
+      dniPaciente:         estado.paciente.dni,
+      numeroTramite:       estado.numeroTramite,
+      servicio:            estado.servicio,
+      mesNumero:           estado.mesNumero,
+      anio:                estado.anio,
+      horas:               estado.horas,
+      cuitReceptor:        estado.cuitReceptor,
+      retroactivo:         estado.retroactivo,
+      puntoVenta:          estado.puntoVenta,
+      nroComprobante:      estado.nroComprobante
+    };
+    
+    google.script.run
+      .withSuccessHandler(function(res) {
+        document.getElementById('resumenOk').innerHTML = document.getElementById('resumenFinal').innerHTML + document.getElementById('boxCalculosM').innerHTML;
+        mostrarPaso(6);
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('error5').textContent = err.message;
+        document.getElementById('btnEnviar').disabled = false;
+      })
+      .guardarFactura(payload);
   }
-
-  document.getElementById('resumenFinal').innerHTML = `<div class="info" style="padding:4px 12px; background:#fff;">${html}</div>`;
-
-  const valorHoraFinal = estado.retroactivo ? estado.valoresCalculados.valorHoraM : estado.valoresCalculados.valorHora;
-  const totalCalculado = (Number(valorHoraFinal) * Number(estado.horas)).toLocaleString('es-AR');
-
-  let htmlCalculos = `
-    <div class="info" style="margin-top:10px; background:#fafafa;">
-      <div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">${estado.valoresCalculados.resolucion || 'No especificada'}</div></div>
-      <div class="resumen-fila"><div class="resumen-label">Valor de la Hora</div><div class="resumen-valor">$${valorHoraFinal}</div></div>
-      <div class="resumen-fila"><div class="resumen-label">Vencimiento N° Trámite</div><div class="resumen-valor">${estado.cliente.vencimientoTramiteK || 'No registra'}</div></div>
-    </div>
-    <div class="importe-box">
-      <div class="imp-label">Importe Total Facturado</div>
-      <div class="imp-valor">$${totalCalculado}</div>
-    </div>
-  `;
-  document.getElementById('boxCalculosM').innerHTML = htmlCalculos;
-}
-
-// ---- ACCIÓN FINAL ----
-// ---- ACCIÓN FINAL ----
-function enviar() {
-  document.getElementById('error5').textContent = '';
-  document.getElementById('btnEnviar').disabled = true;
-  
-  // 🟢 ACTUALIZACIÓN: Se elimina la propiedad 'estado' y se mapea 'vencimientoTramiteK' de la Columna K
-  const payload = {
-    cuit:                estado.cliente.cuit,
-    claveAfip:           estado.cliente.claveAfip,
-    clienteNombre:       estado.cliente.cliente,
-    pacienteNombre:      estado.paciente.nombre,
-    numeroAfiliado:      estado.paciente.numeroAfiliado,
-    vencimientoTramiteK: estado.cliente.vencimientoTramiteK || 'No registra', 
-    dniPaciente:         estado.paciente.dni,
-    numeroTramite:       estado.numeroTramite,
-    servicio:            estado.servicio,
-    mesNumero:           estado.mesNumero,
-    anio:                estado.anio,
-    horas:               estado.horas,
-    cuitReceptor:        estado.cuitReceptor,
-    retroactivo:         estado.retroactivo,
-    puntoVenta:          estado.puntoVenta,
-    nroComprobante:      estado.nroComprobante
-  };
-  
-  google.script.run
-    .withSuccessHandler(function(res) {
-      document.getElementById('resumenOk').innerHTML = document.getElementById('resumenFinal').innerHTML + document.getElementById('boxCalculosM').innerHTML;
-      mostrarPaso(6);
-    })
-    .withFailureHandler(function(err) {
-      document.getElementById('error5').textContent = err.message;
-      document.getElementById('btnEnviar').disabled = false;
-    })
-    .guardarFactura(payload);
-}
 </script>
 </body>
 </html>
