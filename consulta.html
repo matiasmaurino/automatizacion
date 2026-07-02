@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      width: 100%; max-width: 420px;
+      margin: 0 auto; padding: 16px 12px;
+      color: #222;
+    }
+    h2 { color: #673ab7; font-size: 20px; margin-bottom: 4px; }
+    .sub { color: #666; margin-bottom: 20px; font-size: 14px; }
+    .paso { display: none; }
+    .paso.activo { display: block; }
+    label { display: block; margin-top: 14px; font-weight: bold; font-size: 13px; }
+    input {
+      display: block; width: 100%; padding: 10px 8px; margin-top: 4px;
+      font-size: 16px; border: 1px solid #ccc; border-radius: 4px;
+    }
+    button {
+      display: block; width: 100%; margin-top: 14px; padding: 12px 10px;
+      background: #673ab7; color: white; border: none; border-radius: 4px;
+      cursor: pointer; font-size: 15px;
+    }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .error { color: #c62828; margin-top: 10px; font-size: 13px; }
+    .info {
+      background: #f3e5f5; padding: 14px; border-radius: 6px;
+      margin-top: 14px; font-size: 14px; line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <h2>Consultar Clave Fiscal ARCA, ARBA y Vencimiento de la exencion de ALAS</h2>
+  <div class="sub">ARCA (ex AFIP) y ARBA</div>
+
+  <!-- PASO 1: DNI -->
+  <div class="paso activo" id="paso1">
+    <label>DNI</label>
+    <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
+    <div class="error" id="error1"></div>
+    <button onclick="buscar()">Buscar</button>
+  </div>
+
+  <!-- PASO 2: éxito -->
+  <div class="paso" id="paso2">
+    <div class="info">
+      ✅ <strong>Pedido registrado</strong><br><br>
+      Tus claves serán enviadas a la brevedad.<br>
+      Ante cualquier consulta comunicate con el estudio.
+    </div>
+    <button style="background:#9e9e9e; margin-top:16px" onclick="reiniciar()">Registrar otro pedido</button>
+  </div>
+
+  <script>
+    var filaActual = null;
+
+    function mostrarPaso(n) {
+      document.querySelectorAll('.paso').forEach(function(p) { p.classList.remove('activo'); });
+      document.getElementById('paso' + n).classList.add('activo');
+    }
+
+    function buscar() {
+      var dni = document.getElementById('dni').value.trim();
+      var error1 = document.getElementById('error1');
+      error1.textContent = '';
+      if (!dni) { error1.textContent = 'Ingresá un DNI.'; return; }
+
+      google.script.run
+        .withSuccessHandler(function(resultados) {
+          if (!resultados || resultados.length === 0) {
+            error1.textContent = 'No encontramos ese DNI.';
+            return;
+          }
+          filaActual = resultados[0].fila;
+          registrar(filaActual);
+        })
+        .withFailureHandler(function(err) {
+          error1.textContent = err.message || err;
+        })
+        .buscarClientePorDni(dni);
+    }
+
+    function registrar(fila) {
+      google.script.run
+        .withSuccessHandler(function() {
+          mostrarPaso(2);
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('error1').textContent = err.message || err;
+        })
+        .registrarPedidoConsulta(fila);
+    }
+
+    function reiniciar() {
+      filaActual = null;
+      document.getElementById('dni').value = '';
+      document.getElementById('error1').textContent = '';
+      mostrarPaso(1);
+    }
+  </script>
+</body>
+</html>

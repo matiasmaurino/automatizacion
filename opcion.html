@@ -16,11 +16,22 @@
     .ok { color: #2e7d32; margin-top: 12px; }
     .lista-item { padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px; cursor: pointer; }
     .lista-item:hover { background: #f5f5f5; }
+    .top-bar { display: flex; justify-content: flex-end; }
+    .btn-cerrar-top {
+      background: none; border: 1px solid #ccc; border-radius: 4px;
+      padding: 6px 12px; font-size: 13px; color: #555; cursor: pointer;
+      width: auto; margin-top: 0;
+    }
+    .btn-cerrar-top:hover { background: #f0f0f0; }
   </style>
 </head>
 <body>
+  <div class="top-bar">
+   
+  </div>
+
   <h2>Opción Monotributo</h2>
-  <div class="sub">Buscá por DNI para cargar CUIT y Clave Fiscal en la cola de descarga.</div>
+  <div class="sub">Ingresa tu DNI para pedirnos que te enviamos la constancia de Opcion del Monotributo.</div>
 
   <label for="dni">DNI</label>
   <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
@@ -32,13 +43,23 @@
   <div class="resultado" id="resultado">
     <p><b>Nombre:</b> <span id="rNombre"></span></p>
     <p><b>CUIT:</b> <span id="rCuit"></span></p>
-    <p><b>Clave:</b> ••••••••</p>
-    <button id="btnGuardar" onclick="guardar()">Agregar a WEBAPP</button>
+  
+    <button id="btnGuardar" onclick="guardar()">Confirmar</button>
     <div id="msgGuardar"></div>
   </div>
 
   <script>
     let clienteSeleccionado = null;
+
+    function cerrarModulo() {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ accion: 'cerrarModulo' }, '*');
+          return;
+        }
+      } catch (e) {}
+      window.top.location.href = window.top.location.href.split('?')[0];
+    }
 
     function buscar() {
       const dni = document.getElementById('dni').value.trim();

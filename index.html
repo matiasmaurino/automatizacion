@@ -7,122 +7,232 @@
     html { width: 100%; overflow-x: hidden; }
     body {
       font-family: Arial, sans-serif;
-      width: 100%;
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 16px 12px;
-      color: #222;
-      overflow-x: hidden;
+      width: 100%; max-width: 440px;
+      margin: 0 auto; padding: 16px 12px;
+      color: #222; overflow-x: hidden;
     }
-    h2 { color: #673ab7; font-size: 20px; }
+    h2 { color: #673ab7; font-size: 20px; margin-bottom: 8px; }
     .paso { display: none; width: 100%; }
     .paso.activo { display: block; }
-    label { display: block; margin-top: 14px; font-weight: bold; font-size: 13px; }
-    input, select {
-      display: block;
-      width: 100%;
-      padding: 10px 8px;
-      margin-top: 4px;
-      font-size: 16px;
-      border: 1px solid #ccc;
+
+    /* Banner paciente persistente */
+    #bannerPaciente {
+      display: none;
+      background: #ede7f6;
+      border-left: 4px solid #673ab7;
+      padding: 8px 10px;
       border-radius: 4px;
-    }
-    button {
-      display: block;
-      margin-top: 20px;
-      padding: 12px 10px;
-      background: #673ab7;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 15px;
-      width: 100%;
-    }
-    button.secundario { background: #999; margin-top: 8px; }
-    button:disabled { background: #ccc; cursor: not-allowed; }
-    .error { color: #c62828; margin-top: 10px; font-size: 13px; word-break: break-word; }
-    .info {
-      background: #f3e5f5;
-      padding: 10px;
-      border-radius: 4px;
-      margin-top: 10px;
       font-size: 13px;
+      margin-bottom: 14px;
       word-break: break-word;
-      overflow-wrap: break-word;
     }
-    .opciones-radio label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; }
-    .opciones-radio input { width: auto; flex-shrink: 0; }
+
+    label { display: block; margin-top: 14px; font-weight: bold; font-size: 13px; }
+    input[type=text], input[type=number], select {
+      display: block; width: 100%;
+      padding: 10px 8px; margin-top: 4px;
+      font-size: 16px; border: 1px solid #ccc; border-radius: 4px;
+    }
+
+    /* Fila mes + checkbox retroactivo */
+    .fila-mes {
+      display: flex; align-items: flex-end; gap: 10px; margin-top: 14px;
+    }
+    .fila-mes .campo-mes { flex: 1; }
+    .fila-mes .campo-mes label { margin-top: 0; }
+    .chk-retro {
+      display: flex; align-items: center; gap: 5px;
+      padding-bottom: 10px; white-space: nowrap;
+    }
+    .chk-retro input { width: auto; margin: 0; }
+    .chk-retro span { font-size: 13px; font-weight: bold; }
+
+    /* Bloque retroactivo */
+    #bloqueRetroactivo { display: none; margin-top: 12px; }
+    .caja-retro {
+      border: 1px solid #e0e0e0; border-radius: 6px;
+      padding: 10px; background: #fafafa; margin-bottom: 4px;
+    }
+    .caja-retro p { margin: 0 0 8px; font-size: 13px; color: #444; }
+    /* Mini imagen factura */
+    .factura-mini {
+      border: 2px solid #333; border-radius: 4px;
+      padding: 8px 10px; background: #fff;
+      margin: 8px 0; font-size: 13px;
+    }
+    .factura-mini .fm-titulo {
+      font-size: 18px; font-weight: bold; margin-bottom: 6px;
+    }
+    .factura-mini .fm-datos {
+      display: flex; gap: 16px; font-size: 12px;
+    }
+    .factura-mini .fm-datos span { font-weight: bold; }
+    .factura-mini .fm-nota {
+      margin-top: 6px; font-size: 11px; color: #666;
+    }
+    .fila-ptos {
+      display: flex; gap: 8px; margin-top: 4px;
+    }
+    .fila-ptos > div { flex: 1; }
+    .fila-ptos label { margin-top: 0; }
+    .cuit-fijo {
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+      border-radius: 4px; padding: 8px 10px;
+      font-size: 13px; margin-top: 10px;
+    }
+
+    /* Botones */
+    .botones { display: flex; gap: 8px; margin-top: 20px; }
+    .btn { padding: 12px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; width: 100%; }
+    .btn-principal { background: #673ab7; color: white; flex: 2; }
+    .btn-volver    { background: #9e9e9e; color: white; flex: 1; }
+    .btn-secundario { background: #ede7f6; color: #673ab7; border: 1px solid #673ab7; margin-top: 8px; width: 100%; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn:disabled { background: #ccc !important; cursor: not-allowed; }
+
+    .error { color: #c62828; margin-top: 10px; font-size: 13px; word-break: break-word; }
+    .info  { background: #f3e5f5; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 13px; word-break: break-word; overflow-wrap: break-word; }
+
+    /* Resumen final */
+    .resumen-fila { padding: 5px 0; border-bottom: 1px solid #e0d0f0; font-size: 13px; }
+    .resumen-fila:last-child { border-bottom: none; }
+    .resumen-label { font-weight: bold; color: #673ab7; font-size: 11px; text-transform: uppercase; }
+    .resumen-valor { margin-top: 2px; }
+
+    /* Importe destacado */
+    .importe-box {
+      background: #673ab7; color: white;
+      border-radius: 6px; padding: 10px 12px;
+      margin-top: 12px; text-align: center;
+    }
+    .importe-box .imp-label { font-size: 12px; opacity: 0.85; }
+    .importe-box .imp-valor { font-size: 22px; font-weight: bold; }
   </style>
 </head>
 <body>
+<h2>Facturación ARCA</h2>
 
-  <h2>Facturación ARCA</h2>
+<!-- Banner paciente persistente -->
+<div id="bannerPaciente"></div>
 
-  <div class="paso activo" id="paso1">
-    <label>Escribí tu DNI</label>
-    <input type="text" id="dniCliente" placeholder="Ej: 30123456">
-    <div class="error" id="error1"></div>
-    <button onclick="paso1_buscar()">Continuar</button>
+<!-- PASO 1: DNI cliente -->
+<div class="paso activo" id="paso1">
+  <label>Escribí tu DNI</label>
+  <input type="text" id="dniCliente" placeholder="Ej: 30123456">
+  <div class="error" id="error1"></div>
+  <div class="botones">
+    <button class="btn btn-principal" onclick="paso1_buscar()">Continuar</button>
+  </div>
+</div>
+
+<!-- PASO 1b: múltiples clientes -->
+<div class="paso" id="paso1b">
+  <label>Encontramos varias coincidencias, elegí la tuya:</label>
+  <select id="selectCliente"></select>
+  <div class="botones">
+    <button class="btn btn-volver" onclick="mostrarPaso(1)">Volver</button>
+    <button class="btn btn-principal" onclick="paso1b_confirmar()">Continuar</button>
+  </div>
+</div>
+
+<!-- PASO 2: DNI paciente -->
+<div class="paso" id="paso2">
+  <div class="info" id="infoCliente"></div>
+  <label>Escribí el DNI del paciente</label>
+  <input type="text" id="dniPaciente" placeholder="Ej: 9603102128">
+  <div class="error" id="error2"></div>
+  <div class="botones">
+    <button class="btn btn-volver" onclick="mostrarPaso(1)">Volver</button>
+    <button class="btn btn-principal" onclick="paso2_buscar()">Continuar</button>
+  </div>
+</div>
+
+<!-- PASO 3: FORMULARIO COMBINADO -->
+<div class="paso" id="paso3">
+
+  <label>¿Qué prestación es?</label>
+  <select id="selectServicio"></select>
+
+  <div class="fila-mes">
+    <div class="campo-mes">
+      <label>Mes de la prestación</label>
+      <select id="selectMes"></select>
+    </div>
+    <div class="chk-retro">
+      <input type="checkbox" id="esRetroactivo" onchange="toggleRetroactivo()">
+      <span>¿Retroactivo?</span>
+    </div>
   </div>
 
-  <div class="paso" id="paso1b">
-    <label>Encontramos varias coincidencias, elegí la tuya:</label>
-    <select id="selectCliente"></select>
-    <button onclick="paso1b_confirmar()">Continuar</button>
+  <!-- Bloque retroactivo -->
+  <div id="bloqueRetroactivo">
+    <div class="caja-retro">
+      <p>Indicá el número de factura que da origen al retroactivo, es decir el número de la factura que presentaste para ese mes de prestación.</p>
+      <div class="factura-mini">
+        <div class="fm-titulo">FACTURA</div>
+        <div class="fm-datos">
+          <div>Punto de Venta:&nbsp;<span>00001</span></div>
+          <div>Comp. Nro:&nbsp;<span>00000052</span></div>
+        </div>
+        <div class="fm-nota">En este ejemplo escribirías: Punto de Venta = <strong>1</strong> y Número de Comprobante = <strong>52</strong></div>
+      </div>
+      <div class="fila-ptos">
+        <div>
+          <label>Punto de Venta</label>
+          <input type="number" id="puntoVenta" placeholder="Ej: 1" min="1">
+        </div>
+        <div>
+          <label>Nro. Comprobante</label>
+          <input type="number" id="nroComprobante" placeholder="Ej: 52" min="1">
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="paso" id="paso2">
-    <div class="info" id="infoCliente"></div>
-    <label>Escribí el DNI del paciente</label>
-    <input type="text" id="dniPaciente" placeholder="Ej: 9603102128">
-    <div class="error" id="error2"></div>
-    <button onclick="paso2_buscar()">Continuar</button>
-  </div>
-
-  <div class="paso" id="paso3">
-    <div class="info" id="infoPaciente"></div>
-    <label>¿Qué prestación es?</label>
-    <select id="selectServicio"></select>
-    <button onclick="mostrarPaso(4)">Continuar</button>
-  </div>
-
-  <div class="paso" id="paso4">
-    <label>Mes de la prestación</label>
-    <select id="selectMes"></select>
-    <button onclick="mostrarPaso(5)">Continuar</button>
-  </div>
-
-  <div class="paso" id="paso5">
-    <label>¿Cuántas horas trabajó?</label>
-    <input type="number" id="horas" min="1">
-    <button onclick="cargarCuitsReceptor(); mostrarPaso(6)">Continuar</button>
-  </div>
-
-  <div class="paso" id="paso6">
+  <!-- CUIT receptor (solo si NO retroactivo) -->
+  <div id="bloqueCuit">
     <label>¿A quién le facturás?</label>
     <select id="selectCuitReceptor"></select>
-    <button type="button" class="secundario" onclick="cargarTodosCuits()">Otro CUIT</button>
-    <button onclick="paso6_continuar()">Continuar</button>
+
   </div>
 
-  <div class="paso" id="paso7">
-    <label>Elegí el número de trámite</label>
-    <div id="opcionesTramite" class="opciones-radio"></div>
-    <button onclick="mostrarPaso(8)">Continuar</button>
-  </div>
+  <label>¿Cuántas horas trabajó?</label>
+  <input type="number" id="horas" min="1" placeholder="Ej: 312">
 
-  <div class="paso" id="paso8">
-    <h3>Confirmá los datos</h3>
-    <div class="info" id="resumenFinal"></div>
-    <div class="error" id="error8"></div>
-    <button onclick="enviar()" id="btnEnviar">Confirmar y enviar</button>
-  </div>
+  <div class="error" id="error3"></div>
 
-  <div class="paso" id="paso9">
-    <h3>✅ ¡Listo!</h3>
-    <div class="info" id="resultadoOk"></div>
+  <div class="botones">
+    <button class="btn btn-volver" onclick="mostrarPaso(2)">Volver</button>
+    <button class="btn btn-principal" onclick="paso3_continuar()">Continuar</button>
   </div>
+</div>
+
+<!-- PASO 4: tramite (solo si hay más de uno) -->
+<div class="paso" id="paso4">
+  <label>Elegí el número de trámite</label>
+  <div id="opcionesTramite" style="margin-top:8px"></div>
+  <div class="botones">
+    <button class="btn btn-volver" onclick="mostrarPaso(3)">Volver</button>
+    <button class="btn btn-principal" onclick="paso4_confirmar()">Continuar</button>
+  </div>
+</div>
+
+<!-- PASO 5: confirmar -->
+<div class="paso" id="paso5">
+  <h3 style="color:#673ab7; margin:0 0 10px">Confirmá los datos</h3>
+  <div id="resumenFinal"></div>
+  <div class="error" id="error5"></div>
+  <div class="botones">
+    <button class="btn btn-volver" id="btnVolver5" onclick="volverDesdePaso5()">Volver</button>
+    <button class="btn btn-principal" id="btnEnviar" onclick="enviar()">Confirmar y enviar</button>
+  </div>
+</div>
+
+<!-- PASO 6: éxito -->
+<div class="paso" id="paso6">
+  <h3>✅ ¡Listo!</h3>
+  <div id="resumenOk"></div>
+</div>
 
 <script>
   const estado = {
@@ -134,33 +244,46 @@
     anio: null,
     horas: null,
     cuitReceptor: null,
-    numeroTramite: null
+    numeroTramite: null,
+    retroactivo: false,
+    puntoVenta: null,
+    nroComprobante: null,
+    vieneDePaso4: false
   };
 
   function mostrarPaso(n) {
     document.querySelectorAll('.paso').forEach(p => p.classList.remove('activo'));
     document.getElementById('paso' + n).classList.add('activo');
+    const banner = document.getElementById('bannerPaciente');
+    banner.style.display = (n >= 3 && estado.paciente) ? 'block' : 'none';
+    window.scrollTo(0, 0);
   }
 
+  function actualizarBanner() {
+    if (!estado.paciente) return;
+    document.getElementById('bannerPaciente').textContent =
+      '👤 ' + estado.paciente.nombre + ' (DNI ' + estado.paciente.dni + ', ' + estado.paciente.estado + ')';
+  }
+
+  // ---- PASO 1 ----
   function paso1_buscar() {
     const dni = document.getElementById('dniCliente').value.trim();
     document.getElementById('error1').textContent = '';
     if (!dni) { document.getElementById('error1').textContent = 'Ingresá tu DNI.'; return; }
-
     google.script.run
-      .withSuccessHandler(function (resultados) {
-        if (!resultados || resultados.length === 0) {
+      .withSuccessHandler(function(res) {
+        if (!res || res.length === 0) {
           document.getElementById('error1').textContent = 'No encontramos ese DNI. Revisalo e intentá de nuevo.';
           return;
         }
-        estado.candidatosCliente = resultados;
-        if (resultados.length === 1) {
-          estado.cliente = resultados[0];
+        estado.candidatosCliente = res;
+        if (res.length === 1) {
+          estado.cliente = res[0];
           irAPaso2();
         } else {
           const sel = document.getElementById('selectCliente');
           sel.innerHTML = '';
-          resultados.forEach((c, i) => {
+          res.forEach((c, i) => {
             const opt = document.createElement('option');
             opt.value = i;
             opt.textContent = c.cliente + ' (CUIT ' + c.cuit + ')';
@@ -169,7 +292,7 @@
           mostrarPaso('1b');
         }
       })
-      .withFailureHandler(function (err) {
+      .withFailureHandler(function(err) {
         document.getElementById('error1').textContent = err.message;
       })
       .buscarClientePorDni(dni);
@@ -177,7 +300,7 @@
 
   function paso1b_confirmar() {
     const idx = document.getElementById('selectCliente').value;
-    estado.cliente = estado.candidatosCliente[idx];
+    estado.cliente = estado.candidatosCliente[Number(idx)];
     irAPaso2();
   }
 
@@ -187,33 +310,33 @@
     mostrarPaso(2);
   }
 
+  // ---- PASO 2 ----
   function paso2_buscar() {
     const dni = document.getElementById('dniPaciente').value.trim();
     document.getElementById('error2').textContent = '';
     if (!dni) { document.getElementById('error2').textContent = 'Ingresá el DNI del paciente.'; return; }
-
     google.script.run
-      .withSuccessHandler(function (p) {
+      .withSuccessHandler(function(p) {
         if (!p) {
           document.getElementById('error2').textContent = 'No encontramos ese paciente para este cliente.';
           return;
         }
         estado.paciente = p;
-        document.getElementById('infoPaciente').textContent =
-          'Paciente: ' + p.nombre + ' (DNI ' + p.dni + ', ' + p.estado + ')';
+        actualizarBanner();
         cargarServicios();
         cargarMeses();
         cargarCuitsReceptor();
         mostrarPaso(3);
       })
-      .withFailureHandler(function (err) {
+      .withFailureHandler(function(err) {
         document.getElementById('error2').textContent = err.message;
       })
       .buscarPacientePorDni(estado.cliente.fila, dni);
   }
 
+  // ---- PASO 3: carga combos ----
   function cargarServicios() {
-    google.script.run.withSuccessHandler(function (lista) {
+    google.script.run.withSuccessHandler(function(lista) {
       const sel = document.getElementById('selectServicio');
       sel.innerHTML = '';
       lista.forEach(s => {
@@ -223,9 +346,6 @@
       });
     }).listarServicios();
   }
-  document.getElementById('selectServicio') && (document.getElementById('selectServicio').onchange = function () {
-    estado.servicio = this.value;
-  });
 
   function cargarMeses() {
     const sel = document.getElementById('selectMes');
@@ -239,43 +359,16 @@
       opt.textContent = nombres[d.getMonth()] + ' ' + d.getFullYear();
       sel.appendChild(opt);
     }
+    // por defecto: mes anterior al actual
     sel.selectedIndex = sel.options.length - 4;
   }
 
-  function paso6_continuar() {
-    estado.servicio = document.getElementById('selectServicio').value;
-    const [mes, anio] = document.getElementById('selectMes').value.split('-');
-    estado.mesNumero = Number(mes);
-    estado.anio = Number(anio);
-    estado.horas = document.getElementById('horas').value;
-    estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
-
-    if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
-      const cont = document.getElementById('opcionesTramite');
-      cont.innerHTML = '';
-      estado.paciente.tramites.forEach((t, i) => {
-        const id = 'tramite_' + i;
-        cont.innerHTML += '<label><input type="radio" name="tramite" id="' + id + '" value="' + t + '" ' + (i === 0 ? 'checked' : '') + '> ' + t + '</label>';
-      });
-      mostrarPaso(7);
-    } else {
-      estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
-      irAResumen();
-    }
-  }
-
   function cargarCuitsReceptor() {
-    google.script.run.withSuccessHandler(function (lista) {
-      pintarCuits(lista);
-    }).listarCuitsReceptor(estado.cliente ? estado.cliente.fila : null);
+    google.script.run.withSuccessHandler(pintarCuits).listarCuitsReceptor(estado.cliente ? estado.cliente.fila : null);
   }
-
   function cargarTodosCuits() {
-    google.script.run.withSuccessHandler(function (lista) {
-      pintarCuits(lista);
-    }).listarTodosLosCuitsReceptor();
+    google.script.run.withSuccessHandler(pintarCuits).listarTodosLosCuitsReceptor();
   }
-
   function pintarCuits(lista) {
     const sel = document.getElementById('selectCuitReceptor');
     sel.innerHTML = '';
@@ -287,59 +380,158 @@
     });
   }
 
-  function irAResumen() {
-    if (!estado.numeroTramite) {
-      const radio = document.querySelector('input[name="tramite"]:checked');
-      estado.numeroTramite = radio ? radio.value : '';
+  function toggleRetroactivo() {
+    const chk = document.getElementById('esRetroactivo');
+    if (!chk.checked) {
+      document.getElementById('bloqueRetroactivo').style.display = 'none';
+      document.getElementById('bloqueCuit').style.display = 'block';
+      document.getElementById('error3').textContent = '';
+      return;
     }
-    const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    document.getElementById('resumenFinal').innerHTML =
-      'Cliente: ' + estado.cliente.cliente + '<br>' +
-      'Paciente: ' + estado.paciente.nombre + ' (DNI ' + estado.paciente.dni + ')<br>' +
-      'Servicio: ' + estado.servicio + '<br>' +
-      'Período: ' + nombresMes[estado.mesNumero - 1] + ' ' + estado.anio + '<br>' +
-      'Horas: ' + estado.horas + '<br>' +
-      'Se factura a CUIT: ' + estado.cuitReceptor + '<br>' +
-      'N° de trámite: ' + estado.numeroTramite;
-    mostrarPaso(8);
+    // Verificar col M antes de habilitar retroactivo
+    const [mes, anio] = document.getElementById('selectMes').value.split('-');
+    const servicio = document.getElementById('selectServicio').value;
+    google.script.run
+      .withSuccessHandler(function(valorM) {
+        if (!valorM || Number(valorM) === 0) {
+          chk.checked = false;
+          document.getElementById('error3').textContent =
+            '⚠️ No hay retroactivo para ese mes y prestación.';
+          return;
+        }
+        document.getElementById('error3').textContent = '';
+        document.getElementById('bloqueRetroactivo').style.display = 'block';
+        document.getElementById('bloqueCuit').style.display = 'none';
+      })
+      .withFailureHandler(function() {
+        chk.checked = false;
+        document.getElementById('error3').textContent = 'Error al verificar el retroactivo.';
+      })
+      .verificarValorRetroactivo(servicio, Number(mes), Number(anio));
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const btn = document.querySelector('#paso7 button');
-    if (btn) btn.onclick = irAResumen;
-  });
+  // ---- PASO 3: validar y continuar ----
+  function paso3_continuar() {
+    document.getElementById('error3').textContent = '';
+    const esRetro = document.getElementById('esRetroactivo').checked;
+    const horas   = document.getElementById('horas').value;
+    const [mes, anio] = document.getElementById('selectMes').value.split('-');
 
+    if (!horas || Number(horas) < 1) {
+      document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
+    }
+    if (esRetro) {
+      const pv = document.getElementById('puntoVenta').value;
+      const nc = document.getElementById('nroComprobante').value;
+      if (!pv || !nc) {
+        document.getElementById('error3').textContent = 'Completá el Punto de Venta y el Número de Comprobante.'; return;
+      }
+      estado.puntoVenta    = pv;
+      estado.nroComprobante = nc;
+      estado.cuitReceptor  = '30628249527';
+    } else {
+      estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
+    }
+
+    estado.servicio    = document.getElementById('selectServicio').value;
+    estado.mesNumero   = Number(mes);
+    estado.anio        = Number(anio);
+    estado.horas       = horas;
+    estado.retroactivo = esRetro;
+
+    // ¿hay más de un trámite?
+    if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
+      const cont = document.getElementById('opcionesTramite');
+      cont.innerHTML = '';
+      estado.paciente.tramites.forEach((t, i) => {
+        cont.innerHTML += '<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal;font-size:14px">' +
+          '<input type="radio" name="tramite" value="' + t + '" ' + (i===0?'checked':'') + '> ' + t + '</label>';
+      });
+      estado.vieneDePaso4 = true;
+      mostrarPaso(4);
+    } else {
+      estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
+      estado.vieneDePaso4 = false;
+      armarResumen();
+      mostrarPaso(5);
+    }
+  }
+
+  // ---- PASO 4 ----
+  function paso4_confirmar() {
+    const radio = document.querySelector('input[name="tramite"]:checked');
+    estado.numeroTramite = radio ? radio.value : '';
+    armarResumen();
+    mostrarPaso(5);
+  }
+
+  function volverDesdePaso5() {
+    mostrarPaso(estado.vieneDePaso4 ? 4 : 3);
+  }
+
+  // ---- Resumen ----
+  function armarResumen() {
+    const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const filas = [
+      ['Cliente',      estado.cliente.cliente],
+      ['CUIT',         estado.cliente.cuit],
+      ['Paciente',     estado.paciente.nombre + ' (DNI ' + estado.paciente.dni + ')'],
+      ['Estado',       estado.paciente.estado],
+      ['Prestación',   estado.servicio],
+      ['Período',      nombres[estado.mesNumero-1] + ' ' + estado.anio],
+      ['Horas',        estado.horas],
+      ['Se factura a', estado.cuitReceptor === '30628249527' ? 'IOMA (30628249527)' : estado.cuitReceptor],
+      ['N° trámite',   estado.numeroTramite]
+    ];
+    if (estado.retroactivo) {
+      filas.push(['Retroactivo', 'Sí — Pto.Vta ' + estado.puntoVenta + ' / Comp. ' + estado.nroComprobante]);
+    }
+    const html = filas.map(f =>
+      '<div class="resumen-fila"><div class="resumen-label">' + f[0] + '</div><div class="resumen-valor">' + f[1] + '</div></div>'
+    ).join('');
+    document.getElementById('resumenFinal').innerHTML = '<div class="info" style="padding:0;overflow:hidden">' + html + '</div>';
+  }
+
+  // ---- ENVÍO ----
   function enviar() {
-    document.getElementById('error8').textContent = '';
+    document.getElementById('error5').textContent = '';
     document.getElementById('btnEnviar').disabled = true;
-
     const payload = {
-      cuit: estado.cliente.cuit,
-      claveAfip: estado.cliente.claveAfip,
-      clienteNombre: estado.cliente.cliente,
+      cuit:           estado.cliente.cuit,
+      claveAfip:      estado.cliente.claveAfip,
+      clienteNombre:  estado.cliente.cliente,
       pacienteNombre: estado.paciente.nombre,
       numeroAfiliado: estado.paciente.numeroAfiliado,
-      estado: estado.paciente.estado,
-      dniPaciente: estado.paciente.dni,
-      numeroTramite: estado.numeroTramite,
-      servicio: estado.servicio,
-      mesNumero: estado.mesNumero,
-      anio: estado.anio,
-      horas: estado.horas,
-      cuitReceptor: estado.cuitReceptor
+      estado:         estado.paciente.estado,
+      dniPaciente:    estado.paciente.dni,
+      numeroTramite:  estado.numeroTramite,
+      servicio:       estado.servicio,
+      mesNumero:      estado.mesNumero,
+      anio:           estado.anio,
+      horas:          estado.horas,
+      cuitReceptor:   estado.cuitReceptor,
+      retroactivo:    estado.retroactivo,
+      puntoVenta:     estado.puntoVenta,
+      nroComprobante: estado.nroComprobante
     };
-
     google.script.run
-      .withSuccessHandler(function (res) {
-        document.getElementById('resultadoOk').innerHTML =
+      .withSuccessHandler(function(res) {
+        const valorM = res.valorHoraM || res.valorHora;
+        const importe = (Number(valorM) * Number(estado.horas)).toLocaleString('es-AR');
+        document.getElementById('resumenOk').innerHTML =
           document.getElementById('resumenFinal').innerHTML +
-          '<hr>' +
-          'Valor hora: $' + res.valorHora + '<br>' +
-          'Resolución: ' + res.resolucion;
-        mostrarPaso(9);
+          '<div class="info" style="margin-top:10px">' +
+            '<div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">' + res.resolucion + '</div></div>' +
+            '<div class="resumen-fila"><div class="resumen-label">Valor de la hora (col. M)</div><div class="resumen-valor">$' + valorM + '</div></div>' +
+          '</div>' +
+          '<div class="importe-box">' +
+            '<div class="imp-label">Importe facturado</div>' +
+            '<div class="imp-valor">$' + importe + '</div>' +
+          '</div>';
+        mostrarPaso(6);
       })
-      .withFailureHandler(function (err) {
-        document.getElementById('error8').textContent = err.message;
+      .withFailureHandler(function(err) {
+        document.getElementById('error5').textContent = err.message;
         document.getElementById('btnEnviar').disabled = false;
       })
       .guardarFactura(payload);
