@@ -6,6 +6,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Actualizacion')
     .addItem('Actualizar CUIT y CLAVES', 'actualizarCuitYClaves')
+    .addItem('Enviar datos personales por email', 'enviarCorreosClientes')
     .addToUi();
 }
 
@@ -38,15 +39,27 @@ function actualizarCuitYClaves() {
       return;
     }
     
-    const valoresOrigen = hojaOrigen.getRange(1, 1, ultimaFilaOrigen, 3).getValues();
+    // 1. Modificado: Traemos hasta la columna 7 (Columna G)
+    const valoresOrigen = hojaOrigen.getRange(1, 1, ultimaFilaOrigen, 7).getValues();
+    
+    // 2. Procesamos los datos para quedarnos solo con A, B, C y G (columna indexada 0, 1, 2 y 6)
+    const datosProcesados = valoresOrigen.map(fila => [
+      fila[0], // Columna A
+      fila[1], // Columna B
+      fila[2], // Columna C
+      fila[6]  // Columna G (Email)
+    ]);
+    
     const ultimaFilaDestino = hojaDestino.getLastRow();
+    // 3. Modificado: Limpiamos 4 columnas en lugar de 3 en el destino (A, B, C y D)
     if (ultimaFilaDestino > 0) {
-      hojaDestino.getRange(1, 1, ultimaFilaDestino, 3).clearContent();
+      hojaDestino.getRange(1, 1, ultimaFilaDestino, 4).clearContent();
     }
     
-    hojaDestino.getRange(1, 1, valoresOrigen.length, 3).setValues(valoresOrigen);
+    // 4. Modificado: Pegamos la nueva matriz que incluye el email en la columna D del destino
+    hojaDestino.getRange(1, 1, datosProcesados.length, 4).setValues(datosProcesados);
     SpreadsheetApp.flush();
-    SpreadsheetApp.getUi().alert('✅ Hoja "CUIT y CLAVES" actualizada con éxito.');
+    SpreadsheetApp.getUi().alert('✅ Hoja "CUIT y CLAVES" actualizada con éxito (incluye emails).');
     
   } catch (error) {
     SpreadsheetApp.getUi().alert('❌ Error: ' + error.toString());
