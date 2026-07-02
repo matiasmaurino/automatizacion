@@ -7,6 +7,8 @@ function onOpen() {
   ui.createMenu('Actualizacion')
     .addItem('Actualizar CUIT y CLAVES', 'actualizarCuitYClaves')
     .addItem('Enviar datos personales por email', 'enviarCorreosClientes')
+       .addItem('Enviar facturas, opcion, credenciales y cae por email', 'enviarFacturasAgrupadas')
+ 
     .addToUi();
 }
 
