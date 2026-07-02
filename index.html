@@ -379,60 +379,65 @@
   }
 
   function paso3_continuar() {
-    document.getElementById('error3').textContent = '';
-    const esRetro = document.getElementById('esRetroactivo').checked;
-    const horas = document.getElementById('horas').value;
-    const [mes, anio] = document.getElementById('selectMes').value.split('-');
+  document.getElementById('error3').textContent = '';
+  const esRetro = document.getElementById('esRetroactivo').checked;
+  const horas = document.getElementById('horas').value;
+  const [mes, anio] = document.getElementById('selectMes').value.split('-');
 
-    if (!horas || Number(horas) < 1) {
-      document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
-    }
-    if (esRetro) {
-      const pv = document.getElementById('puntoVenta').value;
-      const nc = document.getElementById('nroComprobante').value;
-      if (!pv || !nc) {
-        document.getElementById('error3').textContent = 'Completá el Punto de Venta y el Número de Comprobante.'; return;
-      }
-      estado.puntoVenta = pv;
-      estado.nroComprobante = nc;
-      estado.cuitReceptor = '30628249527';
-    } else {
-      estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
-    }
-
-    estado.servicio = document.getElementById('selectServicio').value;
-    estado.mesNumero = Number(mes);
-    estado.anio = Number(anio);
-    estado.horas = horas;
-    estado.retroactivo = esRetro;
-
-    const nombresMeses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-    
-    google.script.run
-      .withSuccessHandler(function(dataValores) {
-        if (!dataValores) {
-          document.getElementById('error3').textContent = 'Error: No se encontraron tarifas para este periodo en TABLAS AUX.';
-          return;
-        }
-        estado.valoresCalculados = dataValores;
-
-        if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
-          const cont = document.getElementById('opcionesTramite');
-          cont.innerHTML = '<h3>Elegí el número de trámite</h3>';
-          estado.paciente.tramites.forEach((t, i) => {
-            cont.innerHTML += `<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal;"><input type="radio" name="tramite" value="${t}" ${i===0?'checked':''}> ${t}</label>`;
-          });
-          estado.vieneDePaso4 = true;
-          mostrarPaso(4);
-        } else {
-          estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
-          estado.vieneDePaso4 = false;
-          armarResumenConfirmacion();
-          mostrarPaso(5);
-        }
-      })
-      .obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1], estado.anio);
+  if (!horas || Number(horas) < 1) {
+    document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
   }
+  if (esRetro) {
+    const pv = document.getElementById('puntoVenta').value;
+    const nc = document.getElementById('nroComprobante').value;
+    if (!pv || !nc) {
+      document.getElementById('error3').textContent = 'Completá el Punto de Venta y el Número de Comprobante.'; return;
+    }
+    estado.puntoVenta = pv;
+    estado.nroComprobante = nc;
+    estado.cuitReceptor = '30628249527';
+  } else {
+    estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
+  }
+
+  estado.servicio = document.getElementById('selectServicio').value;
+  estado.mesNumero = Number(mes);
+  estado.anio = Number(anio);
+  estado.horas = horas;
+  estado.retroactivo = esRetro;
+
+  const nombresMeses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  
+  google.script.run
+    .withSuccessHandler(function(dataValores) {
+      if (!dataValores) {
+        document.getElementById('error3').textContent = 'Error: No se encontraron tarifas para este periodo en TABLAS AUX.';
+        return;
+      }
+      estado.valoresCalculados = dataValores;
+
+      if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
+        const cont = document.getElementById('opcionesTramite');
+        cont.innerHTML = '<h3>Elegí el número de trámite</h3>';
+        estado.paciente.tramites.forEach((t, i) => {
+          cont.innerHTML += `<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal;"><input type="radio" name="tramite" value="${t}" ${i===0?'checked':''}> ${t}</label>`;
+        });
+        estado.vieneDePaso4 = true;
+        
+        // 🟢 CORREGIDO ACÁ: Ahora dice mostrarPaso y va a avanzar sin trabarse
+        mostrarPaso(4);
+      } else {
+        estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
+        estado.vieneDePaso4 = false;
+        armarResumenConfirmacion();
+        mostrarPaso(5);
+      }
+    })
+    .withFailureHandler(function(err) {
+       document.getElementById('error3').textContent = err.message;
+    })
+    .obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1], estado.anio);
+}
 
   // ---- PASO 4 ----
   function paso4_confirmar() {
