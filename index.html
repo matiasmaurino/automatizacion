@@ -492,26 +492,29 @@
 }
 
 // ---- ACCIÓN FINAL ----
+// ---- ACCIÓN FINAL ----
 function enviar() {
   document.getElementById('error5').textContent = '';
   document.getElementById('btnEnviar').disabled = true;
   
+  // 🟢 ACTUALIZACIÓN: Se elimina la propiedad 'estado' y se mapea 'vencimientoTramiteK' de la Columna K
   const payload = {
-    cuit:           estado.cliente.cuit,
-    claveAfip:      estado.cliente.claveAfip,
-    clienteNombre:  estado.cliente.cliente,
-    pacienteNombre: estado.paciente.nombre,
-    numeroAfiliado: estado.paciente.numeroAfiliado,
-    dniPaciente:    estado.paciente.dni,
-    numeroTramite:  estado.numeroTramite,
-    servicio:       estado.servicio,
-    mesNumero:      estado.mesNumero,
-    anio:           estado.anio,
-    horas:          estado.horas,
-    cuitReceptor:   estado.cuitReceptor,
-    retroactivo:    estado.retroactivo,
-    puntoVenta:     estado.puntoVenta,
-    nroComprobante: estado.nroComprobante
+    cuit:                estado.cliente.cuit,
+    claveAfip:           estado.cliente.claveAfip,
+    clienteNombre:       estado.cliente.cliente,
+    pacienteNombre:      estado.paciente.nombre,
+    numeroAfiliado:      estado.paciente.numeroAfiliado,
+    vencimientoTramiteK: estado.cliente.vencimientoTramiteK || 'No registra', 
+    dniPaciente:         estado.paciente.dni,
+    numeroTramite:       estado.numeroTramite,
+    servicio:            estado.servicio,
+    mesNumero:           estado.mesNumero,
+    anio:                estado.anio,
+    horas:               estado.horas,
+    cuitReceptor:        estado.cuitReceptor,
+    retroactivo:         estado.retroactivo,
+    puntoVenta:          estado.puntoVenta,
+    nroComprobante:      estado.nroComprobante
   };
   
   google.script.run

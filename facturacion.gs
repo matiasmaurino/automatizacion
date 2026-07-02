@@ -327,60 +327,52 @@ function _mesARango(mesNumero, anio) {
  * GUARDAR FACTURA EN HOJA WEBAPP
  ***********************************************************/
 function guardarFactura(payload) {
-  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio));
-  const mesNombre = MESES[Number(payload.mesNumero) - 1];
+  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); //
+  const mesNombre = MESES[Number(payload.mesNumero) - 1]; //
 
-  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio);
+  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); //
   if (!vr) {
-    throw new Error('No se encontró el valor de hora / resolución para ese servicio y período en TABLAS AUX. Revisá que el período exista en esa hoja.');
+    throw new Error('No se encontró el valor de hora / resolución para ese servicio.'); //
   }
 
-  // Si es retroactivo, el receptor siempre es IOMA
-  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor;
-
+  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; //
+  
+  // 🟢 ACTUALIZACIÓN: Removimos payload.estado de la descripción y añadimos el Vencimiento del Trámite (Columna K)
   let descripcion =
     payload.servicio + ' ' +
     payload.pacienteNombre + ' ' +
     payload.numeroAfiliado + '/00 ' +
-    payload.estado + ' ' +
     'DNI ' + payload.dniPaciente + ' ' +
     'tramite ' + payload.numeroTramite + ' ' +
+    '(Vence: ' + payload.vencimientoTramiteK + ') ' +
     'segun resolucion ' + vr.resolucion + ' ' +
     'del mes de ' + mesNombre + ' ' + payload.anio + ' ' +
-    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora;
+    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; //
 
   if (payload.retroactivo) {
     descripcion = 'RETROACTIVO de Factura Pto.Vta ' + payload.puntoVenta +
-      ' Nro ' + payload.nroComprobante + ' — ' + descripcion;
+      ' Nro ' + payload.nroComprobante + ' — ' + descripcion; //
   }
 
-  const sheet = _sheetFacturar();
+  const sheet = _sheetFacturar(); //
   sheet.appendRow([
     payload.cuit,            // A
     payload.claveAfip,       // B
     payload.clienteNombre,   // C
-    rango.fechaFactura,      // D FECHA
+    rango.fechaFactura,      // D
     'Factura C',             // E
-    rango.desde,             // F DESDE
-    rango.hasta,             // G HASTA
-    rango.fechaEmision,      // H VENCIMIENTO
+    rango.desde,             // F
+    rango.hasta,             // G
+    rango.fechaEmision,      // H
     cuitReceptorFinal,       // I
     'Exento',                // J
     descripcion,             // K
-    Number(payload.horas),   // L Cant
+    Number(payload.horas),   // L
     'otras unidades',        // M
-    vr.valorHora             // N Prec
+    vr.valorHora             // N
   ]);
-
-  return {
-    ok: true,
-    valorHora:  vr.valorHora,
-    valorHoraM: vr.valorHoraM,
-    resolucion: vr.resolucion,
-    descripcion: descripcion
-  };
+  return { ok: true }; //
 }
-
 /***********************************************************
  * MÓDULO OPCIÓN MONOTRIBUTO
  ***********************************************************/
