@@ -304,13 +304,13 @@
     irAPaso2();
   }
 
+    // ---- PASO 2 ----
   function irAPaso2() {
-    document.getElementById('infoCliente').textContent =
-      'Cliente: ' + estado.cliente.cliente + ' — CUIT ' + estado.cliente.cuit;
+    // Muestra DNI y Apellido/Nombre validados en la primera pantalla
+    document.getElementById('bannerSolicitante').innerHTML = 
+      `<strong>Validación Inicial Solicitante:</strong><br>👤 ${estado.cliente.cliente}<br>📄 CUIT/DNI: ${estado.cliente.cuit}`;
     mostrarPaso(2);
   }
-
-  // ---- PASO 2 ----
   function paso2_buscar() {
     const dni = document.getElementById('dniPaciente').value.trim();
     document.getElementById('error2').textContent = '';

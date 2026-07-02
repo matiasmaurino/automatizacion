@@ -68,20 +68,27 @@ function _soloDigitos(v) {
   return String(v || '').replace(/\D/g, '');
 }
 
+function _getPlanillaExentosExterna() {
+  const ID_PLANILLA_EXTERNA = "1JjdVfUdiIhSMO1McU4FK2o0U2k-Qyd7clPDfQ0fzKjU";
+  const ss = SpreadsheetApp.openById(ID_PLANILLA_EXTERNA);
+  return ss.getSheetByName("Exentos");
+}
+
 /***********************************************************
- * BÚSQUEDA DE CLIENTE POR DNI
+ * BÚSQUEDA DE CLIENTE POR DNI (CON ADICIÓN DE COLUMNA K)
  ***********************************************************/
 function buscarClientePorDni(dniInput) {
   const dni = _soloDigitos(dniInput);
   if (dni.length < 6) {
     throw new Error('Ingresá un DNI válido.');
   }
-  const sheet = _sheetExentos();
+  
+  const sheet = _getPlanillaExentosExterna();
   const data = sheet.getDataRange().getValues();
   const resultados = [];
 
   for (let r = 1; r < data.length; r++) {
-    const cuit = _soloDigitos(data[r][1]);
+    const cuit = _soloDigitos(data[r][1]); // Columna B (CUIT)
     if (cuit.length < 10) continue;
 
     const dniConCero = dni.length === 7 ? '0' + dni : dni;
@@ -90,12 +97,24 @@ function buscarClientePorDni(dniInput) {
     if (cuit.indexOf(dni) !== -1 ||
         cuit.indexOf(dniConCero) !== -1 ||
         (dniSinCero && cuit.indexOf(dniSinCero) !== -1)) {
+      
+      // Formateo de fecha de la Columna K (Índice 10)
+      let fechaFormateada = 'No registra';
+      if (data[r][10]) {
+        try {
+          fechaFormateada = Utilities.formatDate(new Date(data[r][10]), Session.getScriptTimeZone(), 'dd/MM/yyyy');
+        } catch(e) {
+          fechaFormateada = String(data[r][10]);
+        }
+      }
+
       resultados.push({
         fila: r + 1,
-        cliente: data[r][0],
-        cuit: data[r][1],
+        cliente: data[r][0], // Columna A
+        cuit: data[r][1],    // Columna B
         claveAfip: data[r][2],
-        cuitReceptorPlanilla: _soloDigitos(data[r][5])
+        cuitReceptorPlanilla: _soloDigitos(data[r][5]),
+        vencimientoTramiteK: fechaFormateada
       });
     }
   }
@@ -170,6 +189,32 @@ function buscarPacientePorDni(filaCliente, dniPacienteInput) {
   }
 
   return null;
+}
+
+/***********************************************************
+ * FILTRADO DINÁMICO DE PRESTACIONES ÚNICAS SIN REPETIR (COLUMNA H)
+ ***********************************************************/
+function listarServiciosUnicosCliente(filaCliente) {
+  const sheet = _getPlanillaExentosExterna();
+  const celdaH = sheet.getRange(filaCliente, 8).getValue(); // Columna H (Prestación)
+
+  if (!celdaH) {
+    return ["Cuidado domiciliario"]; // Valor por defecto si estuviese vacío
+  }
+
+  // Separamos por comas, saltos de línea o barras
+  const serviciosSucios = String(celdaH).split(/[\n,;\/]+/);
+  const serviciosLimpios = [];
+
+  serviciosSucios.forEach(function(s) {
+    const sTrimmed = s.trim();
+    // CONDICIONAL CLAVE: Validamos que no esté vacío y que NO esté repetido en la lista
+    if (sTrimmed !== '' && serviciosLimpios.indexOf(sTrimmed) === -1) {
+      serviciosLimpios.push(sTrimmed);
+    }
+  });
+
+  return serviciosLimpios;
 }
 
 /***********************************************************
