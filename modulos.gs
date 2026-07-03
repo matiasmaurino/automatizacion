@@ -27,7 +27,7 @@ function doGet(e) {
 
   if (modulo === 'facturacion') {
     return HtmlService.createHtmlOutputFromFile('index')
-      .setTitle('Facturación ARCA')
+      .setTitle('Facturación IOMA')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
@@ -53,8 +53,16 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 
+if (modulo === 'facturacionnoioma') {
+    return HtmlService.createTemplateFromFile('index no ioma')
+        .evaluate()
+        .setTitle('Facturar Coseguro - Particular - Empresa')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
+
   return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('AUTOMATIZACION ARCA')
+    .setTitle('Estudio Contable CB & MM')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

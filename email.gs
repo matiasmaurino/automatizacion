@@ -8,45 +8,75 @@ function enviarCorreosClientes() {
     return;
   }
   
-  const rango = hoja.getRange(2, 1, ultimaFila - 1, 6);
+  const rango = hoja.getRange(2, 1, ultimaFila - 1, 8);
   const datos = rango.getValues();
+  const hoy = new Date(); // Fecha actual para comparar
   
   datos.forEach(function(fila, indice) {
     const columnaA = fila[0];
     const columnaB = fila[1];
     const columnaC = fila[2];
     const columnaD = fila[3];
-    const columnaE = fila[4];
+    const columnaE = fila[4]; // Fecha de vencimiento ALAS
     const emailDestino = String(fila[5]).trim();
+    const estadoEnvio = String(fila[7]).trim(); 
     
-    if (emailDestino && emailDestino.indexOf('@') !== -1) {
-      const asunto = "Envío de datos - Estudio Contable CBMM";
-      const cuerpo = `Estimado/a cliente,
+    if (emailDestino && emailDestino.indexOf('@') !== -1 && estadoEnvio !== "Enviado") {
+      const asunto = "Envío de claves personales y vencimiento de ALAS - Estudio Contable CB&MM";
       
-Te enviamos los datos registrados en nuestro base de datos:
+      // 1. Formatear la fecha a DD/MM/AAAA de forma limpia
+      let fechaFormateada = "";
+      let advertenciaVencido = "";
+      
+      if (columnaE instanceof Date) {
+        fechaFormateada = Utilities.formatDate(columnaE, Session.getScriptTimeZone(), "d/M/yyyy");
+        
+        // 2. Validar si la fecha está vencida (menor a hoy)
+        if (columnaE < hoy) {
+          advertenciaVencido = ' <br><span style="color: red; font-weight: bold;">⚠️ Tu exención en ingresos brutos está vencida</span>';
+        }
+      } else if (columnaE) {
+        // Por si acaso viene como texto y no como objeto Date
+        fechaFormateada = columnaE;
+      }
 
-• CUIT / Dato A: ${columnaA}
-• ${columnaB}
-• Clave ARCA (ex AFIP) / Dato C: ${columnaC}
-• Clave ARBA / Dato D: ${columnaD}
-• Vencimiento de tu exencion en ingresos brutos (ALAS) / Dato E: ${columnaE}
-
-Muchas gracias
-Saludos
-
-Estudio Contable CB & MM
-Contadores Publicos
-Celular/Whatsapp 221.544.0900
-estudiocontablecbmm@gmail.com
-estudiocontable-cb-mm.web.app/
-`;
+      // 3. Armamos el cuerpo en HTML reemplazando los saltos de línea por <br>
+      const cuerpoHtml = `
+        <p>Estimado/a cliente,</p>
+        <p>Te enviamos los datos registrados en nuestra base de datos:</p>
+        <ul>
+          <li><strong>CUIT:</strong> ${columnaA}</li>
+          <li><strong>${columnaB}</strong></li>
+          <li><strong>Clave ARCA (ex AFIP):</strong> ${columnaC}</li>
+          <li><strong>Clave ARBA:</strong> ${columnaD}</li>
+          <li><strong>Vencimiento de tu exención en ingresos brutos (ALAS):</strong> ${fechaFormateada}${advertenciaVencido}</li>
+        </ul>
+        <p>Muchas gracias<br>Saludos</p>
+        <p><strong>Estudio Contable CB & MM</strong><br>
+        Contadores Públicos<br>
+        Celular/Whatsapp 221.544.0900<br>
+        <a href="mailto:estudiocontablecbmm@gmail.com">estudiocontablecbmm@gmail.com</a><br>
+        <a href="https://estudiocontable-cb-mm.web.app/">estudiocontable-cb-mm.web.app/</a></p>
+      `;
 
       try {
-        MailApp.sendEmail(emailDestino, asunto, cuerpo);
+        // Usamos htmlBody para que reconozca los estilos y el color rojo
+        MailApp.sendEmail({
+          to: emailDestino,
+          subject: asunto,
+          htmlBody: cuerpoHtml
+        });
+        
         Logger.log(`Correo enviado correctamente a: ${emailDestino}`);
+        
+        const filaReal = indice + 2; 
+        hoja.getRange(filaReal, 8).setValue('Enviado');
+        
       } catch (error) {
         Logger.log(`Error al enviar correo a ${emailDestino}: ${error.toString()}`);
       }
+    } else if (estadoEnvio === "Enviado") {
+      Logger.log(`Fila ${indice + 2}: Ya fue enviado anteriormente.`);
     } else {
       Logger.log(`Fila ${indice + 2}: No se envió correo porque la columna F está vacía o no es válida.`);
     }
