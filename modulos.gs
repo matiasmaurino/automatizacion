@@ -282,35 +282,26 @@ function listarServiciosCliente(filaCliente) {
  * K=VALOR HOI, L=MES PARA ORDEN, M=Aumento (retroactivo)
  ***********************************************************/
 function _getValorYResolucion(servicio, mesNombre, anio) {
-  const sheet = _sheetTablaAux(); 
+  const sheet = _sheetTablaAux();
   const lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return null;
-  
-  // Leemos desde la fila 2, columna 1 (A) hasta la última fila y columna M (13 columnas)
-  const data = sheet.getRange(2, 1, lastRow - 1, 13).getValues();
-  
-  // Normalizamos lo que el usuario ingresó para buscar (en mayúsculas y sin espacios extras)
-  const periodoBuscado = (mesNombre + ' ' + anio).toUpperCase().trim();
-  const servicioBuscado = String(servicio).toUpperCase().trim();
-  
+  // 7 columnas: G hasta M
+  const data = sheet.getRange(2, 7, lastRow - 1, 7).getValues();
+
+  const claveBuscada = (mesNombre + ' ' + anio + servicio).toUpperCase().replace(/\s+/g, ' ').trim();
+
   for (let i = 0; i < data.length; i++) {
-    // Columna H es el índice 7 (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7)
-    const periodoPlanilla = String(data[i][7]).toUpperCase().trim();
-    
-    // Columna J es el índice 9 (I=8, J=9)
-    const servicioPlanilla = String(data[i][9]).toUpperCase().trim();
-    
-    // Si coinciden de forma independiente el período y el servicio:
-    if (periodoPlanilla === periodoBuscado && servicioPlanilla === servicioBuscado) {
+    const clave = String(data[i][0]).toUpperCase().replace(/\s+/g, ' ').trim();
+    if (clave === claveBuscada) {
       return {
-        resolucion: data[i][8],  // Columna I (índice 8)
-        valorHora:  data[i][10], // Columna K (índice 10)
-        valorHoraM: data[i][12]  // Columna M (índice 12)
+        resolucion: data[i][2],  // col I
+        valorHora:  data[i][4],  // col K
+        valorHoraM: data[i][6]   // col M (Aumento / valor retroactivo)
       };
     }
   }
   return null;
 }
+
 /***********************************************************
  * FECHAS
  ***********************************************************/
@@ -335,54 +326,72 @@ function _mesARango(mesNumero, anio) {
 /***********************************************************
  * GUARDAR FACTURA EN HOJA WEBAPP
  ***********************************************************/
+/***********************************************************
+ * GUARDAR FACTURA EN HOJA WEBAPP (VERSIÓN CORRECTA)
+ ***********************************************************/
 function guardarFactura(payload) {
-  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); //
-  const mesNombre = MESES[Number(payload.mesNumero) - 1]; //
-
-  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); //
-  if (!vr) {
-    throw new Error('No se encontró el valor de hora / resolución para ese servicio.'); //
+  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); // 
+  
+  // 🟢 CORRECCIÓN: Si mesNumero es un texto (ej: "Julio"), lo usamos directamente en mayúsculas.
+  // Si es un número (ej: 7), lo traducimos usando el array MESES.
+  let mesNombre = '';
+  if (!isNaN(payload.mesNumero) && Number(payload.mesNumero) >= 1 && Number(payload.mesNumero) <= 12) {
+    mesNombre = MESES[Number(payload.mesNumero) - 1];
+  } else {
+    mesNombre = String(payload.mesNumero).toUpperCase().trim();
   }
 
-  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; //
-  
-  // 🟢 ACTUALIZACIÓN: Removimos payload.estado de la descripción y añadimos el Vencimiento del Trámite (Columna K)
+  // Ahora el buscador va a recibir el mes perfecto en MAYÚSCULAS ("JULIO")
+  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); // 
+  if (!vr) {
+    throw new Error('No se encontró el valor de hora / resolución para ese servicio y período en TABLAS AUX. Revisá que el período exista en esa hoja.'); // [cite: 158]
+  }
+
+  // Si es retroactivo, el receptor siempre es IOMA
+  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; // [cite: 159]
+
   let descripcion =
     payload.servicio + ' ' +
     payload.pacienteNombre + ' ' +
     payload.numeroAfiliado + '/00 ' +
+    payload.estado + ' ' +
     'DNI ' + payload.dniPaciente + ' ' +
     'tramite ' + payload.numeroTramite + ' ' +
-    '(Vence: ' + payload.vencimientoTramiteK + ') ' +
     'segun resolucion ' + vr.resolucion + ' ' +
     'del mes de ' + mesNombre + ' ' + payload.anio + ' ' +
-    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; //
+    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; // [cite: 160, 161]
 
   if (payload.retroactivo) {
     descripcion = 'RETROACTIVO de Factura Pto.Vta ' + payload.puntoVenta +
-      ' Nro ' + payload.nroComprobante + ' — ' + descripcion; //
+      ' Nro ' + payload.nroComprobante + ' — ' + descripcion; // [cite: 161, 162]
   }
 
-  const sheet = _sheetFacturar(); //
+  const sheet = _sheetFacturar(); // [cite: 162]
   sheet.appendRow([
-    payload.cuit,            // A
-    payload.claveAfip,       // B
-    payload.clienteNombre,   // C
-    rango.fechaFactura,      // D
-    'Factura C',             // E
-    rango.desde,             // F
-    rango.hasta,             // G
-    rango.fechaEmision,      // H
-    cuitReceptorFinal,       // I
-    'Exento',                // J
-    descripcion,             // K
-    Number(payload.horas),   // L
-    'otras unidades',        // M
-    vr.valorHora             // N
+    payload.cuit,            // A [cite: 162]
+    payload.claveAfip,       // B [cite: 162]
+    payload.clienteNombre,   // C [cite: 162]
+    rango.fechaFactura,      // D FECHA [cite: 162]
+    'Factura C',             // E [cite: 162]
+    rango.desde,             // F DESDE [cite: 162]
+    rango.hasta,             // G HASTA [cite: 162, 163]
+    rango.fechaEmision,      // H VENCIMIENTO [cite: 163]
+    cuitReceptorFinal,       // I [cite: 163]
+    'Exento',                // J [cite: 163]
+    descripcion,             // K [cite: 163]
+    Number(payload.horas),   // L Cant [cite: 163]
+    'otras unidades',        // M [cite: 163]
+    vr.valorHora             // N Prec [cite: 164]
   ]);
-  return { ok: true }; //
-}
 
+  return {
+    ok: true, // [cite: 165]
+    valorHora:  vr.valorHora, // [cite: 165]
+    valorHoraM: vr.valorHoraM, // [cite: 165]
+    resolucion: vr.resolucion, // [cite: 165]
+    descripcion: descripcion // [cite: 165]
+  };
+}
 /***********************************************************
  * MÓDULO OPCIÓN MONOTRIBUTO
  ***********************************************************/
@@ -443,33 +452,40 @@ function generarOpcionesVerificacion(filaCliente) {
   return opciones;
 }
 
-function verificarYObtenerDatosClave(filaCliente, nombreElegido) {
-  const sheet = _sheetExentos();
-  const nombreReal = String(sheet.getRange(filaCliente, 1).getValue() || '').trim();
+  /***********************************************************
+ * FUNCIÓN CORREGIDA: TOLERANTE A TEXTO O NÚMERO
+ ***********************************************************/
+function verificarValorRetroactivo(servicio, mesNumeroOTexto, anio) {
+  let mesNombre = '';
 
-  if (!nombreElegido || nombreElegido.trim() !== nombreReal) {
-    throw new Error('La selección no coincide. Volvé a intentarlo desde el DNI.');
+  // Si le mandaron un número (ej: 7 o "7")
+  if (!isNaN(mesNumeroOTexto) && Number(mesNumeroOTexto) >= 1 && Number(mesNumeroOTexto) <= 12) {
+    mesNombre = MESES[Number(mesNumeroOTexto) - 1];
+  } else {
+    // Si ya le mandaron el texto directo (ej: "JULIO")
+    mesNombre = String(mesNumeroOTexto).toUpperCase().trim();
   }
 
-  const fila = sheet.getRange(filaCliente, 1, 1, 5).getValues()[0];
-
-  return {
-    cliente:          fila[0],
-    cuit:             fila[1],
-    claveArca:        fila[2],
-    claveArba:        fila[3],
-    vencimientoAlas:  fila[4]
-  };
-}
-
-/***********************************************************
- * VERIFICAR SI HAY RETROACTIVO PARA UN MES/SERVICIO
- * Devuelve el valor de col M (0 si no hay retroactivo)
- ***********************************************************/
-function obtenerTarifaAuxiliar(servicio, mesNumero, anio) {
-  const mesNombre = MESES[Number(mesNumero) - 1];
   const vr = _getValorYResolucion(servicio, mesNombre, anio);
   return vr ? Number(vr.valorHoraM) : 0;
+}
+
+// Asegurate también de tener esta función duplicada por si el HTML llama a "obtenerTarifaAuxiliar"
+function obtenerTarifaAuxiliar(servicio, mesNumeroOTexto, anio) {
+  let mesNombre = '';
+  if (!isNaN(mesNumeroOTexto) && Number(mesNumeroOTexto) >= 1 && Number(mesNumeroOTexto) <= 12) {
+    mesNombre = MESES[Number(mesNumeroOTexto) - 1];
+  } else {
+    mesNombre = String(mesNumeroOTexto).toUpperCase().trim();
+  }
+
+  const vr = _getValorYResolucion(servicio, mesNombre, anio);
+  if (!vr) return null;
+  return {
+    resolucion: vr.resolucion,
+    valorHora:  vr.valorHora,
+    valorHoraM: vr.valorHoraM
+  };
 }
 
 /***********************************************************
