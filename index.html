@@ -10,21 +10,15 @@
     .sub { color: #666; margin-bottom: 24px; font-size: 14px; text-align: center; }
     
     .banner-validacion {
-      background: #f5f5f5;
-      border-left: 4px solid #666;
-      padding: 10px;
-      border-radius: 4px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      word-break: break-word;
-      text-align: left;
+      background: #f5f5f5; border-left: 4px solid #666; padding: 10px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; word-break: break-word; text-align: left;
     }
-
     label { display: block; margin-top: 16px; font-weight: bold; font-size: 14px; text-align: left; }
     input[type=text], input[type=number], select {
       width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px;
     }
-
+    .campo-fijo {
+      background-color: #f0f0f0; color: #555; font-weight: bold; cursor: not-allowed;
+    }
     .fila-mes { display: flex; align-items: flex-end; gap: 10px; margin-top: 14px; }
     .fila-mes .campo-mes { flex: 1; }
     .chk-retro { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; white-space: nowrap; }
@@ -39,11 +33,9 @@
     .factura-mini .fm-titulo { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
     .factura-mini .fm-datos { display: flex; gap: 16px; font-size: 12px; }
     .factura-mini .fm-datos span { font-weight: bold; }
-    
     .fila-ptos { display: flex; gap: 8px; margin-top: 4px; }
     .fila-ptos > div { flex: 1; }
 
-    /* Botones de acción estilo GRIS CLÁSICO de opcion.html */
     .botones { display: flex; gap: 8px; margin-top: 24px; }
     .btn { display: block; width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; cursor: pointer; border: 1px solid #ccc; border-radius: 8px; background: #f8f8f8; color: #222; }
     .btn:hover { background: #eee; }
@@ -57,8 +49,8 @@
     .resumen-label { font-weight: bold; color: #333; }
     .resumen-valor { text-align: right; max-width: 60%; word-break: break-all; }
 
-    .importe-box { background: #f5f5f5; color: #222; border: 1px solid #ccc; border-radius: 6px; padding: 12px; margin-top: 14px; text-align: center; }
-    .importe-box .imp-label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #555; }
+    .importe-box { background: #673ab7; color: white; border-radius: 6px; padding: 12px; margin-top: 14px; text-align: center; }
+    .importe-box .imp-label { font-size: 12px; font-weight: bold; text-transform: uppercase; opacity: 0.9; }
     .importe-box .imp-valor { font-size: 24px; font-weight: bold; margin-top: 4px; }
     
     .paso { display: none; }
@@ -109,7 +101,11 @@
   <select id="selectServicio"></select>
 
   <label id="labelTramite">¿Qué número de trámite es?</label>
-  <select id="selectTramite"></select>
+  <select id="selectTramite" style="display: none;"></select>
+  <input type="text" id="inputTramiteFijo" class="campo-fijo" disabled style="display: none;">
+
+  <label id="labelVencimiento">Vencimiento N° de Trámite</label>
+  <input type="text" id="vencimientoTramiteInput" class="campo-fijo" disabled value="No registra">
 
   <div class="fila-mes">
     <div class="campo-mes">
@@ -163,7 +159,6 @@
 <div class="paso" id="paso5">
   <h2>Confirmá los datos</h2>
   <div id="resumenFinal"></div>
-  <div id="boxCalculosM"></div>
   <div class="error" id="error5"></div>
   <div class="botones">
     <button class="btn" id="btnVolver5" onclick="mostrarPaso(3)">Volver</button>
@@ -202,17 +197,6 @@
     window.scrollTo(0, 0);
   }
 
-  function cerrarModulo() {
-    try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ accion: 'cerrarModulo' }, '*');
-        return;
-      }
-    } catch (e) {}
-    window.top.location.href = window.top.location.href.split('?')[0];
-  }
-
-  // ---- PASO 1 ----
   function paso1_buscar() {
     const dni = document.getElementById('dniCliente').value.trim();
     document.getElementById('error1').textContent = '';
@@ -258,7 +242,6 @@
     mostrarPaso(2);
   }
 
-  // ---- PASO 2 ----
   function paso2_buscar() {
     const dni = document.getElementById('dniPaciente').value.trim();
     document.getElementById('error2').textContent = '';
@@ -281,7 +264,10 @@
         cargarTramitesDinamicos(); 
         cargarMeses();
         cargarCuitsReceptor();
-        document.getElementById('vencimientoTramiteInput').value = res[0].vencimientoTramiteK || 'No registra';
+        
+        // Rellenamos el cuadro de vencimiento con el dato de la columna K obtenido en el Paso 1
+        document.getElementById('vencimientoTramiteInput').value = estado.cliente.vencimientoTramiteK || 'No registra';
+
         mostrarPaso(3);
       })
       .withFailureHandler(function(err) {
@@ -290,11 +276,16 @@
       .buscarPacientePorDni(estado.cliente.fila, dni);
   }
 
-  // ---- PASO 3 ----
   function cargarServiciosDinamicos() {
     google.script.run.withSuccessHandler(function(lista) {
       const sel = document.getElementById('selectServicio');
       sel.innerHTML = '';
+      
+      // 🟢 PUNTO 2: Agregamos opción vacía por defecto
+      const optVacia = document.createElement('option');
+      optVacia.value = ''; optVacia.textContent = 'Seleccionar prestación...';
+      sel.appendChild(optVacia);
+
       lista.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
@@ -305,20 +296,29 @@
 
   function cargarTramitesDinamicos() {
     const sel = document.getElementById('selectTramite');
-    const label = document.getElementById('labelTramite');
+    const inputFijo = document.getElementById('inputTramiteFijo');
     sel.innerHTML = '';
     
     if (estado.paciente.tramites && estado.paciente.tramites.length > 0) {
-      label.style.display = 'block';
-      sel.style.display = 'block';
-      estado.paciente.tramites.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t; opt.textContent = t;
-        sel.appendChild(opt);
-      });
+      // 🟢 PUNTO 2: Si tiene UN SOLO trámite, lo mostramos plano no editable
+      if (estado.paciente.tramites.length === 1) {
+        sel.style.display = 'none';
+        inputFijo.style.display = 'block';
+        inputFijo.value = estado.paciente.tramites[0];
+      } else {
+        // Si tiene múltiples, mostramos el menú Select clásico
+        inputFijo.style.display = 'none';
+        sel.style.display = 'block';
+        estado.paciente.tramites.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t; opt.textContent = t;
+          sel.appendChild(opt);
+        });
+      }
     } else {
-      label.style.display = 'none';
       sel.style.display = 'none';
+      inputFijo.style.display = 'block';
+      inputFijo.value = 'No registra';
     }
   }
 
@@ -360,6 +360,11 @@
     }
     const [mes, anio] = document.getElementById('selectMes').value.split('-');
     const servicio = document.getElementById('selectServicio').value;
+    if (!servicio) {
+      chk.checked = false;
+      document.getElementById('error3').textContent = '⚠️ Primero seleccioná una prestación.';
+      return;
+    }
     google.script.run
       .withSuccessHandler(function(valorM) {
         if (!valorM || Number(valorM) === 0) {
@@ -380,10 +385,15 @@
 
   function paso3_continuar() {
     document.getElementById('error3').textContent = '';
-    const esRetro = document.getElementById('esRetroactivo').checked;
     const horas = document.getElementById('horas').value;
+    const servicio = document.getElementById('selectServicio').value;
     const [mes, anio] = document.getElementById('selectMes').value.split('-');
+    const esRetro = document.getElementById('esRetroactivo').checked;
 
+    // Validaciones de formulario
+    if (!servicio) {
+      document.getElementById('error3').textContent = 'Seleccioná la prestación realizada.'; return;
+    }
     if (!horas || Number(horas) < 1) {
       document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
     }
@@ -400,16 +410,24 @@
       estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
     }
 
-    estado.servicio = document.getElementById('selectServicio').value;
-    
-    const selTr = document.getElementById('selectTramite');
-    estado.numeroTramite = selTr.style.display !== 'none' ? selTr.value : '';
-
+    estado.servicio = servicio;
     estado.mesNumero = Number(mes);
     estado.anio = Number(anio);
     estado.horas = horas;
     estado.retroactivo = esRetro;
+    
+    // Captura inteligente del trámite final
+    const selTr = document.getElementById('selectTramite');
+    const inputFijo = document.getElementById('inputTramiteFijo');
+    if (selTr.style.display !== 'none') {
+      estado.numeroTramite = selTr.value;
+    } else if (inputFijo.style.display !== 'none') {
+      estado.numeroTramite = inputFijo.value === 'No registra' ? '' : inputFijo.value;
+    } else {
+      estado.numeroTramite = '';
+    }
 
+    // 🟢 SINCRONIZACIÓN DE FECHAS CORREGIDA: Sincroniza con formato de búsqueda real de base de datos
     const nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     
     google.script.run
@@ -428,11 +446,9 @@
       .obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1], estado.anio);
   }
 
-  // ---- Vista Previa de Confirmación (Paso 5) ----
   function armarResumenConfirmacion() {
     const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     
-    // 1. Datos básicos recopilados
     let html = `
       <div class="resumen-fila"><div class="resumen-label">Cliente</div><div class="resumen-valor">${estado.cliente.cliente}</div></div>
       <div class="resumen-fila"><div class="resumen-label">CUIT</div><div class="resumen-valor">${estado.cliente.cuit}</div></div>
@@ -450,20 +466,19 @@
       html += `<div class="resumen-fila"><div class="resumen-label">Retroactivo</div><div class="resumen-valor">Pto Vta: ${estado.puntoVenta} / Comp: ${estado.nroComprobante}</div></div>`;
     }
 
-    // 2. Cálculos de tarifas obtenidos del backend
     const valorHoraFinal = estado.retroactivo ? estado.valoresCalculados.valorHoraM : estado.valoresCalculados.valorHora;
     const totalCalculado = (Number(valorHoraFinal) * Number(estado.horas)).toLocaleString('es-AR');
 
-    // 3. Unificamos todo el contenido dentro del contenedor 'resumenFinal' que SÍ existe de forma nativa
+    // 🟢 UNIFICACIÓN CORRECTA: Todo se inyecta de forma conjunta sin llamar a elementos externos rotos
     html += `
       <div class="info" style="margin-top:10px; background:#fafafa; border-top:1px solid #ccc; padding-top:8px;">
         <div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">${estado.valoresCalculados.resolucion || 'No especificada'}</div></div>
         <div class="resumen-fila"><div class="resumen-label">Valor de la Hora</div><div class="resumen-valor">$${valorHoraFinal}</div></div>
         <div class="resumen-fila"><div class="resumen-label">Vencimiento N° Trámite</div><div class="resumen-valor">${estado.cliente.vencimientoTramiteK || 'No registra'}</div></div>
       </div>
-      <div class="importe-box" style="background:#673ab7; color:#fff; padding:10px; border-radius:4px; text-align:center; margin-top:10px;">
-        <div style="font-size:12px; uppercase;">Importe Total Facturado</div>
-        <div style="font-size:22px; font-weight:bold;">$${totalCalculado}</div>
+      <div class="importe-box" style="background:#673ab7; color:#fff; padding:12px; border-radius:6px; text-align:center; margin-top:14px;">
+        <div style="font-size:12px; font-weight:bold; text-transform:uppercase;">Importe Total Facturado</div>
+        <div style="font-size:24px; font-weight:bold; margin-top:4px;">$${totalCalculado}</div>
       </div>
     `;
 
@@ -495,7 +510,7 @@
     
     google.script.run
       .withSuccessHandler(function(res) {
-        document.getElementById('resumenOk').innerHTML = document.getElementById('resumenFinal').innerHTML + document.getElementById('boxCalculosM').innerHTML;
+        document.getElementById('resumenOk').innerHTML = document.getElementById('resumenFinal').innerHTML;
         mostrarPaso(6);
       })
       .withFailureHandler(function(err) {
