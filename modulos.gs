@@ -46,6 +46,13 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 
+  if (modulo === 'deuda') {
+    return HtmlService.createHtmlOutputFromFile('deuda')
+      .setTitle('Consulta de Deuda Monotributo')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('AUTOMATIZACION ARCA')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -591,5 +598,32 @@ function registrarPedidoConsulta(fila) {
     sheetDP.getRange(1,1,1,7).setValues([['CUIT','CLIENTE','CLAVE ARCA','CLAVE ARBA','VENCIMIENTO ALAS','EMAIL','FECHA SOLICITUD']]);
   }
   sheetDP.appendRow([row[1], row[0], row[2], row[3], row[4], row[6], new Date()]);
+  return 'ok';
+}
+/***********************************************************
+ * MÓDULO DEUDA MONOTRIBUTO
+ * Escribe pedido en hoja "CCMA" de AUTOMATIZACION
+ ***********************************************************/
+function registrarPedidoDeuda(fila) {
+  const sheetEx = _sheetExentos();
+  const row = sheetEx.getRange(fila, 1, 1, 3).getValues()[0];
+  // A=CLIENTE, B=CUIT, C=CLAVE AFIP
+
+  const ssAuto = SpreadsheetApp.openById(AUTOMATIZACION_SS_ID);
+  let sheet = ssAuto.getSheetByName('CCMA');
+  if (!sheet) {
+    sheet = ssAuto.insertSheet('CCMA');
+    sheet.getRange(1, 1, 1, 6).setValues([[
+      'CUIT', 'CLIENTE', 'CLAVE AFIP', 'FECHA PEDIDO', 'ESTADO', 'ENVIADO EMAIL'
+    ]]);
+  }
+  sheet.appendRow([
+    row[1],      // B = CUIT
+    row[0],      // A = CLIENTE
+    row[2],      // C = CLAVE AFIP
+    new Date(),  // FECHA PEDIDO
+    '',          // ESTADO — lo completa el script Python
+    ''           // ENVIADO EMAIL — lo completa el script Python
+  ]);
   return 'ok';
 }
