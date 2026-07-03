@@ -238,7 +238,7 @@
 
   function irAPaso2() {
     document.getElementById('bannerSolicitante').innerHTML = 
-      `<strong>Validación Inicial Solicitante:</strong><br>👤 ${estado.cliente.cliente}<br>📄 CUIT/DNI: ${estado.cliente.cuit}`;
+      `<strong>Validación Inicial Solicitante:</strong><br>👤 ${estado.cliente.cliente}<br>📄 CUIT: ${estado.cliente.cuit}`;
     mostrarPaso(2);
   }
 
@@ -257,7 +257,7 @@
         
         document.getElementById('bannerValidacionCruzada').innerHTML = 
           `<strong>Datos Registrados:</strong><br>` +
-          `👤 Solicitante: ${estado.cliente.cliente} (CUIT/DNI: ${estado.cliente.cuit})<br>` +
+          `👤 Solicitante: ${estado.cliente.cliente} (CUIT: ${estado.cliente.cuit})<br>` +
           `👤 Paciente: ${estado.paciente.nombre} (DNI ${estado.paciente.dni})`;
           
         cargarServiciosDinamicos(); 
@@ -265,7 +265,6 @@
         cargarMeses();
         cargarCuitsReceptor();
         
-        // Rellenamos el cuadro de vencimiento con el dato de la columna K obtenido en el Paso 1
         document.getElementById('vencimientoTramiteInput').value = estado.cliente.vencimientoTramiteK || 'No registra';
 
         mostrarPaso(3);
@@ -280,17 +279,38 @@
     google.script.run.withSuccessHandler(function(lista) {
       const sel = document.getElementById('selectServicio');
       sel.innerHTML = '';
-      
-      // 🟢 PUNTO 2: Agregamos opción vacía por defecto
-      const optVacia = document.createElement('option');
-      optVacia.value = ''; optVacia.textContent = 'Seleccionar prestación...';
-      sel.appendChild(optVacia);
 
-      lista.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s; opt.textContent = s;
-        sel.appendChild(opt);
-      });
+      if (lista && lista.length === 1) {
+        sel.style.display = 'none';
+        
+        let inputFijo = document.getElementById('inputServicioFijo');
+        if (!inputFijo) {
+          inputFijo = document.createElement('input');
+          inputFijo.type = 'text';
+          inputFijo.id = 'inputServicioFijo';
+          inputFijo.className = 'campo-fijo';
+          inputFijo.disabled = true;
+          sel.parentNode.insertBefore(inputFijo, sel.nextSibling);
+        }
+        inputFijo.style.display = 'block';
+        inputFijo.value = lista[0];
+        estado.servicio = lista[0];
+      } else {
+        const inputFijo = document.getElementById('inputServicioFijo');
+        if (inputFijo) inputFijo.style.display = 'none';
+        sel.style.display = 'block';
+
+        const optVacia = document.createElement('option');
+        optVacia.value = ''; optVacia.textContent = 'Seleccionar prestación...';
+        sel.appendChild(optVacia);
+
+        lista.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sel.appendChild(opt);
+        });
+        estado.servicio = '';
+      }
     }).listarServiciosUnicosCliente(estado.cliente.fila);
   }
 
@@ -300,13 +320,11 @@
     sel.innerHTML = '';
     
     if (estado.paciente.tramites && estado.paciente.tramites.length > 0) {
-      // 🟢 PUNTO 2: Si tiene UN SOLO trámite, lo mostramos plano no editable
       if (estado.paciente.tramites.length === 1) {
         sel.style.display = 'none';
         inputFijo.style.display = 'block';
         inputFijo.value = estado.paciente.tramites[0];
       } else {
-        // Si tiene múltiples, mostramos el menú Select clásico
         inputFijo.style.display = 'none';
         sel.style.display = 'block';
         estado.paciente.tramites.forEach(t => {
@@ -341,12 +359,35 @@
     google.script.run.withSuccessHandler(function(lista) {
       const sel = document.getElementById('selectCuitReceptor');
       sel.innerHTML = '';
-      lista.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c === '30628249527' ? 'IOMA (30628249527)' : c;
-        sel.appendChild(opt);
-      });
+
+      if (lista && lista.length === 1) {
+        sel.style.display = 'none';
+        
+        let inputFijo = document.getElementById('inputCuitFijo');
+        if (!inputFijo) {
+          inputFijo = document.createElement('input');
+          inputFijo.type = 'text';
+          inputFijo.id = 'inputCuitFijo';
+          inputFijo.className = 'campo-fijo';
+          inputFijo.disabled = true;
+          sel.parentNode.insertBefore(inputFijo, sel.nextSibling);
+        }
+        inputFijo.style.display = 'block';
+        inputFijo.value = lista[0] === '30628249527' ? 'IOMA (30628249527)' : lista[0];
+        estado.cuitReceptor = lista[0];
+      } else {
+        const inputFijo = document.getElementById('inputCuitFijo');
+        if (inputFijo) inputFijo.style.display = 'none';
+        sel.style.display = 'block';
+
+        lista.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c === '30628249527' ? 'IOMA (30628249527)' : c;
+          sel.appendChild(opt);
+        });
+        estado.cuitReceptor = sel.value;
+      }
     }).listarCuitsReceptor(estado.cliente.fila);
   }
 
@@ -359,7 +400,11 @@
       return;
     }
     const [mes, anio] = document.getElementById('selectMes').value.split('-');
-    const servicio = document.getElementById('selectServicio').value;
+    
+    const selSe = document.getElementById('selectServicio');
+    const inputServicioFijo = document.getElementById('inputServicioFijo');
+    const servicio = (selSe.style.display === 'none' && inputServicioFijo) ? inputServicioFijo.value : selSe.value;
+
     if (!servicio) {
       chk.checked = false;
       document.getElementById('error3').textContent = '⚠️ Primero seleccioná una prestación.';
@@ -386,17 +431,24 @@
   function paso3_continuar() {
     document.getElementById('error3').textContent = '';
     const horas = document.getElementById('horas').value;
-    const servicio = document.getElementById('selectServicio').value;
     const [mes, anio] = document.getElementById('selectMes').value.split('-');
     const esRetro = document.getElementById('esRetroactivo').checked;
 
-    // Validaciones de formulario
-    if (!servicio) {
+    const selSe = document.getElementById('selectServicio');
+    const inputServicioFijo = document.getElementById('inputServicioFijo');
+    if (selSe.style.display === 'none' && inputServicioFijo) {
+      estado.servicio = inputServicioFijo.value;
+    } else {
+      estado.servicio = selSe.value;
+    }
+
+    if (!estado.servicio) {
       document.getElementById('error3').textContent = 'Seleccioná la prestación realizada.'; return;
     }
     if (!horas || Number(horas) < 1) {
       document.getElementById('error3').textContent = 'Ingresá la cantidad de horas.'; return;
     }
+
     if (esRetro) {
       const pv = document.getElementById('puntoVenta').value;
       const nc = document.getElementById('nroComprobante').value;
@@ -407,27 +459,30 @@
       estado.nroComprobante = nc;
       estado.cuitReceptor = '30628249527';
     } else {
-      estado.cuitReceptor = document.getElementById('selectCuitReceptor').value;
+      const selCu = document.getElementById('selectCuitReceptor');
+      const inputCuitFijo = document.getElementById('inputCuitFijo');
+      if (selCu.style.display === 'none' && inputCuitFijo) {
+        estado.cuitReceptor = inputCuitFijo.value.indexOf('30628249527') !== -1 ? '30628249527' : inputCuitFijo.value;
+      } else {
+        estado.cuitReceptor = selCu.value;
+      }
     }
 
-    estado.servicio = servicio;
     estado.mesNumero = Number(mes);
     estado.anio = Number(anio);
     estado.horas = horas;
     estado.retroactivo = esRetro;
     
-    // Captura inteligente del trámite final
     const selTr = document.getElementById('selectTramite');
-    const inputFijo = document.getElementById('inputTramiteFijo');
-    if (selTr.style.display !== 'none') {
+    const inputTramiteFijo = document.getElementById('inputTramiteFijo');
+    if (selTr && selTr.style.display !== 'none') {
       estado.numeroTramite = selTr.value;
-    } else if (inputFijo.style.display !== 'none') {
-      estado.numeroTramite = inputFijo.value === 'No registra' ? '' : inputFijo.value;
+    } else if (inputTramiteFijo && inputTramiteFijo.style.display !== 'none') {
+      estado.numeroTramite = inputTramiteFijo.value === 'No registra' ? '' : inputTramiteFijo.value;
     } else {
       estado.numeroTramite = '';
     }
 
-    // 🟢 SINCRONIZACIÓN DE FECHAS CORREGIDA: Sincroniza con formato de búsqueda real de base de datos
     const nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     
     google.script.run
@@ -443,8 +498,7 @@
       .withFailureHandler(function(err) {
          document.getElementById('error3').textContent = err.message;
       })
-      .obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1], estado.anio);
-  }
+.obtenerTarifaAuxiliar(estado.servicio, nombresMeses[estado.mesNumero - 1].toUpperCase(), estado.anio);  }
 
   function armarResumenConfirmacion() {
     const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -469,7 +523,6 @@
     const valorHoraFinal = estado.retroactivo ? estado.valoresCalculados.valorHoraM : estado.valoresCalculados.valorHora;
     const totalCalculado = (Number(valorHoraFinal) * Number(estado.horas)).toLocaleString('es-AR');
 
-    // 🟢 UNIFICACIÓN CORRECTA: Todo se inyecta de forma conjunta sin llamar a elementos externos rotos
     html += `
       <div class="info" style="margin-top:10px; background:#fafafa; border-top:1px solid #ccc; padding-top:8px;">
         <div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">${estado.valoresCalculados.resolucion || 'No especificada'}</div></div>

@@ -282,26 +282,35 @@ function listarServiciosCliente(filaCliente) {
  * K=VALOR HOI, L=MES PARA ORDEN, M=Aumento (retroactivo)
  ***********************************************************/
 function _getValorYResolucion(servicio, mesNombre, anio) {
-  const sheet = _sheetTablaAux();
+  const sheet = _sheetTablaAux(); 
   const lastRow = sheet.getLastRow();
-  // 7 columnas: G hasta M
-  const data = sheet.getRange(2, 7, lastRow - 1, 7).getValues();
-
-  const claveBuscada = (mesNombre + ' ' + anio + servicio).toUpperCase().replace(/\s+/g, ' ').trim();
-
+  if (lastRow <= 1) return null;
+  
+  // Leemos desde la fila 2, columna 1 (A) hasta la última fila y columna M (13 columnas)
+  const data = sheet.getRange(2, 1, lastRow - 1, 13).getValues();
+  
+  // Normalizamos lo que el usuario ingresó para buscar (en mayúsculas y sin espacios extras)
+  const periodoBuscado = (mesNombre + ' ' + anio).toUpperCase().trim();
+  const servicioBuscado = String(servicio).toUpperCase().trim();
+  
   for (let i = 0; i < data.length; i++) {
-    const clave = String(data[i][0]).toUpperCase().replace(/\s+/g, ' ').trim();
-    if (clave === claveBuscada) {
+    // Columna H es el índice 7 (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7)
+    const periodoPlanilla = String(data[i][7]).toUpperCase().trim();
+    
+    // Columna J es el índice 9 (I=8, J=9)
+    const servicioPlanilla = String(data[i][9]).toUpperCase().trim();
+    
+    // Si coinciden de forma independiente el período y el servicio:
+    if (periodoPlanilla === periodoBuscado && servicioPlanilla === servicioBuscado) {
       return {
-        resolucion: data[i][2],  // col I
-        valorHora:  data[i][4],  // col K
-        valorHoraM: data[i][6]   // col M (Aumento / valor retroactivo)
+        resolucion: data[i][8],  // Columna I (índice 8)
+        valorHora:  data[i][10], // Columna K (índice 10)
+        valorHoraM: data[i][12]  // Columna M (índice 12)
       };
     }
   }
   return null;
 }
-
 /***********************************************************
  * FECHAS
  ***********************************************************/
@@ -457,7 +466,7 @@ function verificarYObtenerDatosClave(filaCliente, nombreElegido) {
  * VERIFICAR SI HAY RETROACTIVO PARA UN MES/SERVICIO
  * Devuelve el valor de col M (0 si no hay retroactivo)
  ***********************************************************/
-function verificarValorRetroactivo(servicio, mesNumero, anio) {
+function obtenerTarifaAuxiliar(servicio, mesNumero, anio) {
   const mesNombre = MESES[Number(mesNumero) - 1];
   const vr = _getValorYResolucion(servicio, mesNombre, anio);
   return vr ? Number(vr.valorHoraM) : 0;
