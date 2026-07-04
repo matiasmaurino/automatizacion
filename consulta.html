@@ -27,8 +27,8 @@ button:hover {
   </style>
 </head>
 <body>
-  <h2>Consultar Clave Fiscal ARCA, ARBA y ALAS</h2>
-  <div class="sub">Ingresá tu DNI para solicitar tus claves. Te las enviaremos por email a la brevedad.</div>
+  <h2>Consultar Clave Fiscal ARCA, ARBA y vencimiento de ALAS</h2>
+  <div class="sub">Ingresá tu DNI para solicitar tus claves y conocer cual es el vencimiento de tu exencion en Ingresos Brutos (ALAS). Te lo enviaremos a la brevedad al email registrado. Si por algun motivo queres que te lo enviemos a otro email, por favor escribinos por whatsapp para indicarnos tu nuevo email. </div>
 
   <label for="dni">DNI</label>
   <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
@@ -40,6 +40,7 @@ button:hover {
   <div class="resultado" id="resultado">
     <p><b>Nombre:</b> <span id="rNombre"></span></p>
     <p><b>CUIT:</b> <span id="rCuit"></span></p>
+    <p><b>Email:</b> <span id="rEmail"></span></p>
     <button id="btnGuardar" onclick="guardar()">Confirmar pedido</button>
     <div id="msgGuardar"></div>
   </div>
@@ -91,6 +92,7 @@ button:hover {
       document.getElementById('listaResultados').innerHTML = '';
       document.getElementById('rNombre').textContent = r.cliente;
       document.getElementById('rCuit').textContent = r.cuit;
+      document.getElementById('rEmail').textContent = r.email || '(sin email registrado)';
       document.getElementById('resultado').style.display = 'block';
       document.getElementById('msgGuardar').textContent = '';
     }
@@ -106,7 +108,7 @@ button:hover {
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Pedido registrado. Tus claves serán enviadas a la brevedad.';
+          msg.textContent = '✅ Pedido registrado. Tus claves serán enviadas a la brevedad al email que figura abajo.';
           btn.disabled = false;
         })
         .withFailureHandler(function(err) {

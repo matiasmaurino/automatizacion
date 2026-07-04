@@ -28,7 +28,7 @@
 </head>
 <body>
   <h2>Consulta de Deuda Monotributo</h2>
-  <div class="sub">Ingresá tu DNI para solicitar el resumen de tu cuenta corriente CCMA en ARCA. Te lo enviaremos por email a la brevedad.</div>
+  <div class="sub">Ingresá primero tu DNI para solicitar el resumen de tu cuenta corriente de la deuda de tu monotributo en ARCA. Te lo enviaremos por email a la brevedad al email registrado. Si por algun motivo queres que te lo enviemos a otro email, por favor escribinos por whatsapp para indicarnos tu nuevo email.</div>
 
   <label for="dni">DNI</label>
   <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
@@ -40,6 +40,7 @@
   <div class="resultado" id="resultado">
     <p><b>Nombre:</b> <span id="rNombre"></span></p>
     <p><b>CUIT:</b> <span id="rCuit"></span></p>
+    <p><b>Email:</b> <span id="rEmail"></span></p>
     <button id="btnGuardar" onclick="guardar()">Confirmar pedido</button>
     <div id="msgGuardar"></div>
   </div>
@@ -91,6 +92,7 @@
       document.getElementById('listaResultados').innerHTML = '';
       document.getElementById('rNombre').textContent = r.cliente;
       document.getElementById('rCuit').textContent = r.cuit;
+      document.getElementById('rEmail').textContent = r.email || '(sin email registrado)';
       document.getElementById('resultado').style.display = 'block';
       document.getElementById('msgGuardar').textContent = '';
     }
@@ -106,7 +108,7 @@
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Pedido registrado. Te enviamos el resumen a la brevedad.';
+          msg.textContent = '✅ Pedido registrado. Te enviamos el resumen a la brevedad al email registrado.';
           btn.disabled = false;
         })
         .withFailureHandler(function(err) {

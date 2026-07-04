@@ -38,8 +38,8 @@
    
   </div>
 
-  <h2>Opción Monotributo</h2>
-  <div class="sub">Ingresa tu DNI para pedirnos que te enviamos la constancia de Opcion del Monotributo por email a la brevedad.</div>
+  <h2>Constancia de Opción y credencial Monotributo</h2>
+  <div class="sub">Ingresa tu DNI para pedirnos que te enviamos la constancia de Opcion del Monotributo y credencial de pagO. Te lo enviaremos por email a la brevedad al email registrado. Si por algun motivo queres que te lo enviemos a otro email, por favor escribinos por whatsapp para indicarnos tu nuevo email</div>
 
   <label for="dni">DNI</label>
   <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
@@ -51,6 +51,7 @@
   <div class="resultado" id="resultado">
     <p><b>Nombre:</b> <span id="rNombre"></span></p>
     <p><b>CUIT:</b> <span id="rCuit"></span></p>
+    <p><b>Email:</b> <span id="rEmail"></span></p>
   
     <button id="btnGuardar" onclick="guardar()">Confirmar</button>
     <div id="msgGuardar"></div>
@@ -113,6 +114,7 @@
       document.getElementById('listaResultados').innerHTML = '';
       document.getElementById('rNombre').textContent = r.cliente;
       document.getElementById('rCuit').textContent = r.cuit;
+      document.getElementById('rEmail').textContent = r.email || '(sin email registrado)';
       document.getElementById('resultado').style.display = 'block';
       document.getElementById('msgGuardar').textContent = '';
     }

@@ -129,6 +129,7 @@ function buscarClientePorDni(dniInput) {
         cuit: data[r][1],    // Columna B
         claveAfip: data[r][2],
         cuitReceptorPlanilla: _soloDigitos(data[r][5]),
+        email: String(data[r][6] || '').trim(), // Columna G
         vencimientoTramiteK: fechaFormateada
       });
     }
