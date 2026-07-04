@@ -15,12 +15,20 @@
     .error { color: #b00020; margin-top: 12px; }
     .ok { color: #2e7d32; margin-top: 12px; }
     .lista-item { padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 8px; cursor: pointer; }
-    .lista-item:hover { background: #6a0dad; }
+    button:hover {
+  background-color: #6a0dad !important;
+  color: #ffffff !important;
+  border-color: #5a0c96 !important;
+}
+.lista-item:hover {
+  background-color: #6a0dad !important;
+  color: #ffffff !important;
+}
   </style>
 </head>
 <body>
   <h2>Consulta de Deuda Monotributo</h2>
-  <div class="sub">Ingresá tu DNI para solicitar el resumen de tu cuenta corriente CCMA en ARCA. Te lo enviaremos a la brevedad.</div>
+  <div class="sub">Ingresá tu DNI para solicitar el resumen de tu cuenta corriente CCMA en ARCA. Te lo enviaremos por email a la brevedad.</div>
 
   <label for="dni">DNI</label>
   <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
