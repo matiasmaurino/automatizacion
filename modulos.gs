@@ -474,6 +474,56 @@ function generarOpcionesVerificacion(filaCliente) {
 }
 
   /***********************************************************
+ * MESES CON RETROACTIVO (col M > 0 en TABLAS AUX)
+ * Devuelve array de {value, label, valorM} para filtrar el select de meses
+ ***********************************************************/
+function obtenerMesesRetroactivos(servicio) {
+  const sheet = _sheetTablaAux();
+  const lastRow = sheet.getLastRow();
+  const data = sheet.getRange(2, 7, lastRow - 1, 7).getValues();
+  // [0]=G(clave), [1]=H(PERIODO), [2]=I(RES IOMA), [3]=J(SERVICIO), [4]=K(VALOR HOI), [5]=L(MES PARA ORDEN), [6]=M(Aumento)
+
+  const mesesMap = {
+    ENERO:1,FEBRERO:2,MARZO:3,ABRIL:4,MAYO:5,JUNIO:6,
+    JULIO:7,AGOSTO:8,SEPTIEMBRE:9,OCTUBRE:10,NOVIEMBRE:11,DICIEMBRE:12
+  };
+  const mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  const resultado = [];
+  const vistos = {};
+
+  for (let i = 0; i < data.length; i++) {
+    const servicioFila = String(data[i][3] || '').trim();
+    const valorM = Number(data[i][6] || 0);
+    const periodo = String(data[i][1] || '').trim(); // ej: "ABRIL 2022"
+
+    if (servicioFila !== servicio || valorM <= 0) continue;
+
+    const partes = periodo.split(' ');
+    if (partes.length < 2) continue;
+    const mesNum = mesesMap[partes[0].toUpperCase()];
+    const anio   = Number(partes[1]);
+    if (!mesNum || !anio) continue;
+
+    const key = mesNum + '-' + anio;
+    if (vistos[key]) continue;
+    vistos[key] = true;
+
+    resultado.push({ value: key, label: mesesNombres[mesNum - 1] + ' ' + anio, valorM: valorM });
+  }
+
+  // Más reciente primero
+  resultado.sort(function(a, b) {
+    const pa = a.value.split('-').map(Number);
+    const pb = b.value.split('-').map(Number);
+    return (pb[1] * 12 + pb[0]) - (pa[1] * 12 + pa[0]);
+  });
+
+  return resultado;
+}
+
+  /***********************************************************
  * FUNCIÓN CORREGIDA: TOLERANTE A TEXTO O NÚMERO
  ***********************************************************/
 function verificarValorRetroactivo(servicio, mesNumeroOTexto, anio) {

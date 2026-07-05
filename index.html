@@ -422,15 +422,48 @@
     const chk = document.getElementById('esRetroactivo');
     const bloqueRetroactivo = document.getElementById('bloqueRetroactivo');
     const bloqueCuit = document.getElementById('bloqueCuit');
-    
+    const error3 = document.getElementById('error3');
+
     if (!chk.checked) {
       bloqueRetroactivo.style.display = 'none';
       bloqueCuit.style.display = 'block';
-      document.getElementById('error3').textContent = '';
+      error3.textContent = '';
+      cargarMeses();  // restaurar todos los meses
       return;
     }
-    bloqueRetroactivo.style.display = 'block';
-    bloqueCuit.style.display = 'none';
+
+    // Obtener servicio seleccionado
+    const selSe = document.getElementById('selectServicio');
+    const inputServicioFijo = document.getElementById('inputServicioFijo');
+    const servicio = (selSe.style.display === 'none' && inputServicioFijo)
+      ? inputServicioFijo.value : selSe.value;
+
+    // Pedir al servidor solo los meses con Aumento > 0 para ese servicio
+    google.script.run
+      .withSuccessHandler(function(meses) {
+        if (!meses || meses.length === 0) {
+          chk.checked = false;
+          error3.textContent = '⚠️ No hay meses con retroactivo para esa prestación.';
+          return;
+        }
+        error3.textContent = '';
+        // Reemplazar el select de meses con solo los meses válidos
+        const sel = document.getElementById('selectMes');
+        sel.innerHTML = '';
+        meses.forEach(function(m) {
+          const opt = document.createElement('option');
+          opt.value = m.value;
+          opt.textContent = m.label + ' ($' + m.valorM + ')';
+          sel.appendChild(opt);
+        });
+        bloqueRetroactivo.style.display = 'block';
+        bloqueCuit.style.display = 'none';
+      })
+      .withFailureHandler(function() {
+        chk.checked = false;
+        error3.textContent = 'Error al verificar meses con retroactivo.';
+      })
+      .obtenerMesesRetroactivos(servicio);
   }
 
   function paso3_continuar() {
