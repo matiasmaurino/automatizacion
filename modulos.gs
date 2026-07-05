@@ -384,20 +384,25 @@ function guardarFactura(payload) {
 
   const sheet = _sheetFacturar(); // [cite: 162]
   sheet.appendRow([
-    payload.cuit,            // A [cite: 162]
-    payload.claveAfip,       // B [cite: 162]
-    payload.clienteNombre,   // C [cite: 162]
-    rango.fechaFactura,      // D FECHA [cite: 162]
-    'Factura C',             // E [cite: 162]
-    rango.desde,             // F DESDE [cite: 162]
-    rango.hasta,             // G HASTA [cite: 162, 163]
-    rango.fechaEmision,      // H VENCIMIENTO [cite: 163]
-    cuitReceptorFinal,       // I [cite: 163]
-    'Exento',                // J [cite: 163]
-    descripcion,             // K [cite: 163]
-    Number(payload.horas),   // L Cant [cite: 163]
-    'otras unidades',        // M [cite: 163]
-    vr.valorHora             // N Prec [cite: 164]
+    payload.cuit,            // A
+    payload.claveAfip,       // B
+    payload.clienteNombre,   // C
+    rango.fechaFactura,      // D FECHA
+    'Factura C',             // E
+    rango.desde,             // F DESDE
+    rango.hasta,             // G HASTA
+    rango.fechaEmision,      // H VENCIMIENTO
+    cuitReceptorFinal,       // I
+    'Exento',                // J
+    descripcion,             // K
+    Number(payload.horas),   // L Cant
+    'otras unidades',        // M
+    vr.valorHora,            // N Prec
+    '',                      // O FACTURA (vacío, lo completa el script)
+    '',                      // P OPCION Y CREDENCIAL (vacío)
+    '',                      // Q CAE (vacío, lo completa el script)
+    payload.retroactivo ? 'SI' : '',   // R RETROACTIVO
+    payload.subimoAIoma ? 'SI' : ''    // S SUBIMOS A IOMA
   ]);
 
   return {

@@ -134,20 +134,22 @@
   <select id="selectServicio"></select>
   <input type="text" id="inputServicioFijo" class="campo-fijo" disabled style="display: none;">
 
-  <div class="fila-mes">
-    <div class="campo-mes">
-      <label>Mes de la prestación</label>
-      <select id="selectMes"></select>
-    </div>
-    <div class="chk-retro">
-      <input type="checkbox" id="esRetroactivo" onchange="toggleRetroactivo()">
-      <span>¿Retroactivo?</span>
-    </div>
+  <label>Mes de la prestación</label>
+  <select id="selectMes" style="width:50%"></select>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+    <input type="checkbox" id="esRetroactivo" onchange="toggleRetroactivo()" style="width:auto;margin:0">
+    <span style="font-size:13px;font-weight:bold">¿Es una factura de retroactivo?</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+    <input type="checkbox" id="subimoAIoma" style="width:auto;margin:0">
+    <span style="font-size:13px;font-weight:bold">¿La subimos a IOMA?</span>
   </div>
 
   <div id="bloqueRetroactivo">
     <div class="caja-retro">
-      <p>Indicá el número de factura que da origen al retroactivo. Busca tu factura y mira arriba y a la derech.</p>
+      <p>Indicá el número de factura que da origen al retroactivo.</p>
       <div class="factura-mini">
         <div class="fm-titulo">FACTURA</div>
         <div class="fm-datos">
@@ -176,6 +178,15 @@
 
   <label>¿Cuántas horas trabajó?</label>
   <input type="number" id="horas" min="1" placeholder="Ej: 312">
+
+  <label>Número de trámite</label>
+  <select id="selectTramite" style="display:none"></select>
+  <input type="text" id="inputTramiteFijo" class="campo-fijo" disabled style="display:none">
+  <p style="font-size:12px;color:#666;margin-top:6px;line-height:1.5">
+    Controlá que el número de trámite sea el correcto. Si no lo es o no figura ninguno, por favor escribinos por 
+    <a href="https://wa.me/542214000000" target="_blank" style="color:#25D366;font-weight:bold">WhatsApp</a> 
+    para enviarnos la nueva acta de IOMA.
+  </p>
 
   <div class="error" id="error3"></div>
   <div class="botones">
@@ -207,7 +218,7 @@
 
 <!-- PASO 6 -->
 <div class="paso" id="paso6">
-  <h3>¡Listo,tomamos nota de tu pedido. Te lo enviaremos por email a la brevedad al email registrado. Si por algun motivo queres que te lo enviemos a otro email, por favor escribinos por whatsapp para indicarnos tu nuevo email</h3>
+  <h3 id="mensajeFinal"></h3>
   <div id="resumenOk"></div>
 </div>
 
@@ -223,6 +234,7 @@
     cuitReceptor: null,
     numeroTramite: null,
     retroactivo: false,
+    subimoAIoma: false,
     puntoVenta: null,
     nroComprobante: null,
     vieneDePaso4: false
@@ -308,6 +320,7 @@
         cargarServiciosDinamicos();
         cargarMeses();
         cargarCuitsReceptorDinamicos();
+        cargarTramites();
         mostrarPaso(3);
       })
       .withFailureHandler(function(err) {
@@ -353,6 +366,31 @@
       sel.appendChild(opt);
     }
     sel.selectedIndex = sel.options.length - 4;
+  }
+
+  function cargarTramites() {
+    const tramites = (estado.paciente.tramites || []);
+    const sel  = document.getElementById('selectTramite');
+    const fijo = document.getElementById('inputTramiteFijo');
+    sel.innerHTML = '';
+
+    if (tramites.length === 0) {
+      sel.style.display = 'none';
+      fijo.style.display = 'block';
+      fijo.value = 'Sin trámite registrado';
+    } else if (tramites.length === 1) {
+      sel.style.display = 'none';
+      fijo.style.display = 'block';
+      fijo.value = tramites[0];
+    } else {
+      fijo.style.display = 'none';
+      sel.style.display = 'block';
+      tramites.forEach(function(t) {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        sel.appendChild(opt);
+      });
+    }
   }
 
   function cargarCuitsReceptorDinamicos() {
@@ -437,21 +475,20 @@
     estado.horas = horas;
     estado.retroactivo = esRetro;
 
-    if (estado.paciente.tramites && estado.paciente.tramites.length > 1) {
-      const cont = document.getElementById('opcionesTramite');
-      cont.innerHTML = '';
-      estado.paciente.tramites.forEach((t, i) => {
-        cont.innerHTML += '<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:normal;font-size:14px">' +
-          '<input type="radio" name="tramite" value="' + t + '" ' + (i===0?'checked':'') + '> ' + t + '</label>';
-      });
-      estado.vieneDePaso4 = true;
-      mostrarPaso(4);
+    // Leer trámite del select/input integrado en paso3
+    const selTramite  = document.getElementById('selectTramite');
+    const fijoTramite = document.getElementById('inputTramiteFijo');
+    if (selTramite.style.display !== 'none') {
+      estado.numeroTramite = selTramite.value;
     } else {
-      estado.numeroTramite = (estado.paciente.tramites && estado.paciente.tramites[0]) || '';
-      estado.vieneDePaso4 = false;
-      armarResumen();
-      mostrarPaso(5);
+      const v = fijoTramite.value;
+      estado.numeroTramite = (v === 'Sin trámite registrado') ? '' : v;
     }
+
+    estado.vieneDePaso4 = false;
+    estado.subimoAIoma = document.getElementById('subimoAIoma').checked;
+    armarResumen();
+    mostrarPaso(5);
   }
 
   function paso4_confirmar() {
@@ -462,7 +499,7 @@
   }
 
   function volverDesdePaso5() {
-    mostrarPaso(estado.vieneDePaso4 ? 4 : 3);
+    mostrarPaso(3);
   }
 
   // 🟢 Resumen modificado: se quitó ESTADO y se añadió VENCIMIENTO NUM DE TRAMITE (Columna K)
@@ -477,7 +514,9 @@
       ['Horas',        estado.horas],
       ['Se factura a', estado.cuitReceptor === '30628249527' ? 'IOMA (30628249527)' : estado.cuitReceptor],
       ['N° trámite',   estado.numeroTramite || 'No registra'],
-      ['Vencimiento N° de Trámite', estado.paciente.vencimientoAlas || 'No registra']
+      ['Vencimiento N° de Trámite', estado.paciente.vencimientoAlas || 'No registra'],
+      ['Retroactivo',  estado.retroactivo ? 'Sí' : 'No'],
+      ['Subimos a IOMA', estado.subimoAIoma ? 'Sí' : 'No']
     ];
     if (estado.retroactivo) {
       filas.push(['Retroactivo', 'Sí — Pto.Vta ' + estado.puntoVenta + ' / Comp. ' + estado.nroComprobante]);
@@ -506,6 +545,7 @@
       horas:          estado.horas,
       cuitReceptor:   estado.cuitReceptor,
       retroactivo:    estado.retroactivo,
+      subimoAIoma:    estado.subimoAIoma,
       puntoVenta:     estado.puntoVenta,
       nroComprobante: estado.nroComprobante
     };
@@ -513,6 +553,16 @@
       .withSuccessHandler(function(res) {
         const valorM = res.valorHoraM || res.valorHora;
         const importe = (Number(valorM) * Number(estado.horas)).toLocaleString('es-AR');
+        const email = estado.cliente.email || '';
+        const waLink = '<a href="https://wa.me/542215440900" target="_blank" style="color:#25D366;font-weight:bold">WhatsApp</a>';
+        let mensaje;
+        if (email) {
+          mensaje = '¡Listo, tomamos nota de tu pedido y te vamos a enviar la factura a <strong>' + email + '</strong>. ' +
+                    'Si querés que te lo enviemos a otro email, necesitamos que nos escribas por ' + waLink + ' y nos digas a qué email querés que te lo enviemos.';
+        } else {
+          mensaje = '¡Listo, tomamos nota de tu pedido! Necesitamos que nos escribas por ' + waLink + ' y nos digas a qué email querés que te lo enviemos.';
+        }
+        document.getElementById('mensajeFinal').innerHTML = mensaje;
         document.getElementById('resumenOk').innerHTML =
           document.getElementById('resumenFinal').innerHTML +
           '<div class="info" style="margin-top:10px">' +
