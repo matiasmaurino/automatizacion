@@ -58,7 +58,9 @@
       msg.textContent = 'Buscando...';
       lista.innerHTML = '';
       resultado.style.display = 'none';
-
+ // HACER VISIBLE EL BOTÓN NUEVAMENTE EN NUEVAS BÚSQUEDAS
+      var btn = document.getElementById('btnGuardar');
+      btn.style.display = 'block';
       google.script.run
         .withSuccessHandler(function(resultados) {
           msg.textContent = '';
@@ -108,8 +110,8 @@
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Ni bien podamos, te enviaremos el detalle de la deuda del monotributo al email registrado.';
-          btn.disabled = false;
+          msg.textContent = '✅ Pedido registrado. No bien podamos te enviaremos el detalle de la deuda del monotributo al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por whatsapp para que podamos darte una respuesta.';
+          btn.style.display = 'none';
         })
         .withFailureHandler(function(err) {
           msg.className = 'error';

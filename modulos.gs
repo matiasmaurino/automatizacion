@@ -95,7 +95,7 @@ function _getPlanillaExentosExterna() {
 function buscarClientePorDni(dniInput) {
   const dni = _soloDigitos(dniInput);
   if (dni.length < 6) {
-    throw new Error('Ingresá un DNI válido.');
+    throw new Error('Ingresá tu DNI.');
   }
   
   const sheet = _getPlanillaExentosExterna();
@@ -172,7 +172,7 @@ function _parsearLineaPaciente(linea, idx) {
 function buscarPacientePorDni(filaCliente, dniPacienteInput) {
   const dni = _soloDigitos(dniPacienteInput);
   if (dni.length < 6) {
-    throw new Error('Ingresá un DNI de paciente válido.');
+    throw new Error('Ingresá un DNI de tu paciente.');
   }
 
   const sheet = _sheetExentos();
@@ -180,7 +180,7 @@ function buscarPacientePorDni(filaCliente, dniPacienteInput) {
   const celdaJ = sheet.getRange(filaCliente, 10).getValue();
 
   if (!celdaI) {
-    throw new Error('Esa fila no tiene pacientes cargados en la columna PACIENTE.');
+    throw new Error('No tenes pacientes cargados en nuestro sistema. Escribinos por whatsapp para que podamos darte una respuesta.');
   }
 
   const lineasI = String(celdaI).split('\n').filter(l => l.trim() !== '');
@@ -277,7 +277,7 @@ function listarServiciosCliente(filaCliente) {
   const celdaH = sheet.getRange(filaCliente, 8).getValue();
 
   if (!celdaH) {
-    throw new Error('Esa fila no tiene ninguna prestación cargada en la columna H.');
+    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.');
   }
 
   const servicios = String(celdaH)
@@ -286,7 +286,7 @@ function listarServiciosCliente(filaCliente) {
     .filter(s => s !== '');
 
   if (servicios.length === 0) {
-    throw new Error('Esa fila no tiene ninguna prestación cargada en la columna H.');
+    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.');
   }
 
   return servicios;
@@ -360,7 +360,7 @@ function guardarFactura(payload) {
   // Ahora el buscador va a recibir el mes perfecto en MAYÚSCULAS ("JULIO")
   const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); // 
   if (!vr) {
-    throw new Error('No se encontró el valor de hora / resolución para ese servicio y período en TABLAS AUX. Revisá que el período exista en esa hoja.'); // [cite: 158]
+    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta '); // [cite: 158]
   }
 
   // Si es retroactivo, el receptor siempre es IOMA
@@ -431,7 +431,7 @@ function guardarOpcion(payload) {
     const cuitFila = _soloDigitos(data[r][0]);
     const estado   = String(data[r][15] || '').trim().toLowerCase();
     if (cuitFila === cuit && estado !== 'descargada') {
-      throw new Error('Ese CUIT ya está cargado en WEBAPP y todavía no fue descargado.');
+      throw new Error('Ya existe un pedido anterior en curso. Tene paciencia que te vamos a enviar los archivos al email registrado que figura arriba');
     }
   }
 
@@ -451,7 +451,7 @@ function generarOpcionesVerificacion(filaCliente) {
   const lastRow = sheet.getLastRow();
 
   const nombreCorrecto = String(sheet.getRange(filaCliente, 1).getValue() || '').trim();
-  if (!nombreCorrecto) throw new Error('No se pudo obtener el nombre del cliente.');
+  if (!nombreCorrecto) throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.');
 
   const todosNombres = sheet.getRange(2, 1, lastRow - 1, 1).getValues()
     .map(r => String(r[0] || '').trim())
@@ -611,7 +611,7 @@ function generarOpcionesMultiFila(filas) {
  ***********************************************************/
 function enviarDatosPersonales(dniInput) {
   const dni = _soloDigitos(dniInput);
-  if (dni.length < 6) throw new Error('Ingresá un DNI válido.');
+  if (dni.length < 6) throw new Error('Ingresá tu DNI.');
 
   const sheet = _sheetExentos();
   const data  = sheet.getDataRange().getValues();
@@ -636,7 +636,7 @@ function enviarDatosPersonales(dniInput) {
     }
   }
 
-  if (!cliente) throw new Error('No encontramos ese DNI en nuestra base de datos.');
+  if (!cliente) throw new Error('No encontramos tu DNI en nuestra base de datos. Escribinos por whatsapp para que podamos darte una respuesta');
 
   // Guardar pedido en hoja DATOS PERSONALES
   const ssAuto = SpreadsheetApp.openById(AUTOMATIZACION_SS_ID);

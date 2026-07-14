@@ -80,6 +80,9 @@
       msg.textContent = 'Buscando...';
       lista.innerHTML = '';
       resultado.style.display = 'none';
+       // HACER VISIBLE EL BOTÓN NUEVAMENTE EN NUEVAS BÚSQUEDAS
+      var btn = document.getElementById('btnGuardar');
+      btn.style.display = 'block';
 
       google.script.run
         .withSuccessHandler(function (resultados) {
@@ -130,8 +133,8 @@
       google.script.run
         .withSuccessHandler(function (res) {
           msg.className = 'ok';
-          msg.textContent = 'Agregado correctamente: ' + res.nombre + ' (CUIT ' + res.cuit + ')';
-          btn.disabled = false;
+          msg.textContent = 'Pedido registrado. No bien podamos te enviaremos la documentacion al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por whatsapp para que podamos darte una respuesta';
+          btn.style.display = 'none';
         })
         .withFailureHandler(function (err) {
           msg.className = 'error';

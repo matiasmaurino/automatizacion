@@ -58,6 +58,9 @@ button:hover {
       msg.textContent = 'Buscando...';
       lista.innerHTML = '';
       resultado.style.display = 'none';
+       // HACER VISIBLE EL BOTÓN NUEVAMENTE EN NUEVAS BÚSQUEDAS
+      var btn = document.getElementById('btnGuardar');
+      btn.style.display = 'block';
 
       google.script.run
         .withSuccessHandler(function(resultados) {
@@ -108,8 +111,8 @@ button:hover {
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Pedido registrado. Tus claves serán enviadas a la brevedad al email que figura abajo.';
-          btn.disabled = false;
+          msg.textContent = '✅ Pedido registrado. No bien podamos te enviaremos tus claves y la fecha del vencimiento de la exencion de ingrsos brutos al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por whatsapp para que podamos darte una respuesta.';
+          btn.style.display = 'none'
         })
         .withFailureHandler(function(err) {
           msg.className = 'error';

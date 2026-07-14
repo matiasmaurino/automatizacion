@@ -391,7 +391,7 @@ function guardarFactura(payload) {
 
   const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); 
   if (!vr) {
-    throw new Error('No se encontró el valor de hora / resolución para ese servicio y período en TABLAS AUX. Revisá que el período exista en esa hoja.'); 
+    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.'); 
   }
 
   const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; 
