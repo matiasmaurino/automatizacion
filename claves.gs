@@ -2,16 +2,6 @@ const GEMINI_API_KEY = PropertiesService.getScriptProperties().getProperty('GEMI
 const CARPETA_ORIGEN_ID = '1cLnlPOvel1V7q-Syegm0KGWNd0F4a_Ws';
 const SPREADSHEET_ORIGEN_ID = '1JjdVfUdiIhSMO1McU4FK2o0U2k-Qyd7clPDfQ0fzKjU';
 
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Actualizacion')
-    .addItem('Actualizar CUIT y CLAVES', 'actualizarCuitYClaves')
-    .addItem('Enviar datos personales por email', 'enviarCorreosClientes')
-       .addItem('Enviar facturas, opcion, credenciales y cae por email', 'enviarFacturasAgrupadas')
- 
-    .addToUi();
-}
-
 // =========================================================================
 // TAREA 2: ACTUALIZAR CUIT Y CLAVES
 // =========================================================================
@@ -61,7 +51,7 @@ function actualizarCuitYClaves() {
     // 4. Modificado: Pegamos la nueva matriz que incluye el email en la columna D del destino
     hojaDestino.getRange(1, 1, datosProcesados.length, 4).setValues(datosProcesados);
     SpreadsheetApp.flush();
-    SpreadsheetApp.getUi().alert('✅ Hoja "CUIT y CLAVES" actualizada con éxito (incluye emails).');
+    SpreadsheetApp.getUi().alert('✅ Hoja "CUIT, CLAVES y Email".');
     
   } catch (error) {
     SpreadsheetApp.getUi().alert('❌ Error: ' + error.toString());

@@ -84,6 +84,11 @@
     .resumen-label { font-weight: bold; color: #333; font-size: 11px; text-transform: uppercase; }
     .resumen-valor { margin-top: 2px; }
 
+    /* Fila horas + valor hora + importe */
+    .fila-horas { display: flex; gap: 8px; margin-top: 4px; }
+    .fila-horas > div { flex: 1; }
+    .fila-horas label { margin-top: 0; }
+
     /* Importe destacado */
     .importe-box { background: #444; color: white; border-radius: 6px; padding: 10px 12px; margin-top: 12px; text-align: center; }
     .importe-box .imp-label { font-size: 12px; opacity: 0.85; }
@@ -135,7 +140,13 @@
   <input type="text" id="inputServicioFijo" class="campo-fijo" disabled style="display: none;">
 
   <label>Mes de la prestación</label>
-  <select id="selectMes" style="width:50%"></select>
+  <select id="selectMes" onchange="actualizarValorHora()"></select>
+<div id="bloqueCuit">
+    <label>¿A quién le facturás?</label>
+    <select id="selectCuitReceptor"></select>
+    <input type="text" id="inputCuitFijo" class="campo-fijo" disabled style="display: none;">
+  </div>
+  
 
   <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
     <input type="checkbox" id="esRetroactivo" onchange="toggleRetroactivo()" style="width:auto;margin:0">
@@ -170,14 +181,20 @@
     </div>
   </div>
 
-  <div id="bloqueCuit">
-    <label>¿A quién le facturás?</label>
-    <select id="selectCuitReceptor"></select>
-    <input type="text" id="inputCuitFijo" class="campo-fijo" disabled style="display: none;">
-  </div>
+  
 
-  <label>¿Cuántas horas trabajó?</label>
-  <input type="number" id="horas" min="1" placeholder="Ej: 312">
+  <label style="margin-top:14px">Horas trabajadas &nbsp;·&nbsp; Valor hora &nbsp;·&nbsp; Importe</label>
+  <div class="fila-horas">
+    <div>
+      <input type="number" id="horas" min="1" placeholder="Ej: 312" oninput="calcularImporte()">
+    </div>
+    <div>
+      <input type="text" id="valorHoraDisplay" class="campo-fijo" disabled placeholder="—">
+    </div>
+    <div>
+      <input type="text" id="importeDisplay" class="campo-fijo" disabled placeholder="$0">
+    </div>
+  </div>
 
   <label>Número de trámite</label>
   <select id="selectTramite" style="display:none"></select>
@@ -349,9 +366,10 @@
           sel.appendChild(opt);
         });
         estado.servicio = sel.value;
-      }
-    }).listarServiciosCliente(estado.cliente.fila);
-  }
+        sel.onchange = function() { estado.servicio = sel.value; actualizarValorHora(); };
+      }                                          // ← cierra else
+    }).listarServiciosCliente(estado.cliente.fila);  // ← cierra withSuccessHandler
+  }                                              // ← cierra cargarServiciosDinamicos
 
   function cargarMeses() {
     const sel = document.getElementById('selectMes');
@@ -366,6 +384,35 @@
       sel.appendChild(opt);
     }
     sel.selectedIndex = sel.options.length - 4;
+    sel.onchange = function() { actualizarValorHora(); };
+    actualizarValorHora();
+  }
+
+  function actualizarValorHora() {
+    const esRetro = document.getElementById('esRetroactivo').checked;
+    const mesVal  = document.getElementById('selectMes').value;
+    if (!mesVal || !estado.servicio) return;
+    const parts = mesVal.split('-');
+    const mesNum = Number(parts[0]);
+    const anio   = Number(parts[1]);
+    google.script.run
+      .withSuccessHandler(function(r) {
+        const val = esRetro ? r.valorM : r.valorK;
+        estado.valorHoraActual = val;
+        document.getElementById('valorHoraDisplay').value = val ? '$' + val : '—';
+        calcularImporte();
+      })
+      .withFailureHandler(function() {
+        document.getElementById('valorHoraDisplay').value = '—';
+      })
+      .obtenerValorHora(estado.servicio, mesNum, anio);
+  }
+
+  function calcularImporte() {
+    const horas = Number(document.getElementById('horas').value) || 0;
+    const vh    = estado.valorHoraActual || 0;
+    const total = horas * vh;
+    document.getElementById('importeDisplay').value = total > 0 ? '$' + total.toLocaleString('es-AR') : '$0';
   }
 
   function cargarTramites() {
@@ -458,6 +505,7 @@
         });
         bloqueRetroactivo.style.display = 'block';
         bloqueCuit.style.display = 'none';
+        actualizarValorHora();
       })
       .withFailureHandler(function() {
         chk.checked = false;
@@ -535,7 +583,6 @@
     mostrarPaso(3);
   }
 
-  // 🟢 Resumen modificado: se quitó ESTADO y se añadió VENCIMIENTO NUM DE TRAMITE (Columna K)
   function armarResumen() {
     const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const filas = [
@@ -548,12 +595,11 @@
       ['Se factura a', estado.cuitReceptor === '30628249527' ? 'IOMA (30628249527)' : estado.cuitReceptor],
       ['N° trámite',   estado.numeroTramite || 'No registra'],
       ['Vencimiento N° de Trámite', estado.paciente.vencimientoAlas || 'No registra'],
-      ['Retroactivo',  estado.retroactivo ? 'Sí' : 'No'],
+      ['Retroactivo',  estado.retroactivo
+        ? ('Sí — Pto.Vta ' + estado.puntoVenta + ' / Comp. ' + estado.nroComprobante)
+        : 'No'],
       ['Subimos a IOMA', estado.subimoAIoma ? 'Sí' : 'No']
     ];
-    if (estado.retroactivo) {
-      filas.push(['Retroactivo', 'Sí — Pto.Vta ' + estado.puntoVenta + ' / Comp. ' + estado.nroComprobante]);
-    }
     const html = filas.map(f =>
       '<div class="resumen-fila"><div class="resumen-label">' + f[0] + '</div><div class="resumen-valor">' + f[1] + '</div></div>'
     ).join('');
@@ -596,12 +642,15 @@
           mensaje = '¡Listo, tomamos nota de tu pedido! Necesitamos que nos escribas por ' + waLink + ' y nos digas a qué email querés que te lo enviemos.';
         }
         document.getElementById('mensajeFinal').innerHTML = mensaje;
+
+        // Armar todas las filas en un solo cuadro con el mismo estilo
+        const resumenFilas = document.getElementById('resumenFinal').querySelector('.info').innerHTML;
+        const filaResolucion = '<div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">' + res.resolucion + '</div></div>';
+        const valorLabel = estado.retroactivo ? 'Valor retroactivo por hora' : 'Valor de la hora';
+        const filaValor = '<div class="resumen-fila"><div class="resumen-label">' + valorLabel + '</div><div class="resumen-valor">$' + valorM + '</div></div>';
+
         document.getElementById('resumenOk').innerHTML =
-          document.getElementById('resumenFinal').innerHTML +
-          '<div class="info" style="margin-top:10px">' +
-            '<div class="resumen-fila"><div class="resumen-label">Resolución</div><div class="resumen-valor">' + res.resolucion + '</div></div>' +
-            '<div class="resumen-fila"><div class="resumen-label">Valor de la hora</div><div class="resumen-valor">$' + valorM + '</div></div>' +
-          '</div>' +
+          '<div class="info">' + resumenFilas + filaResolucion + filaValor + '</div>' +
           '<div class="importe-box">' +
             '<div class="imp-label">Importe facturado</div>' +
             '<div class="imp-valor">$' + importe + '</div>' +

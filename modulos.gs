@@ -473,7 +473,14 @@ function generarOpcionesVerificacion(filaCliente) {
   return opciones;
 }
 
-  /***********************************************************
+  function obtenerValorHora(servicio, mesNumero, anio) {
+  const mesNombre = MESES[Number(mesNumero) - 1];
+  const vr = _getValorYResolucion(servicio, mesNombre, anio);
+  if (!vr) return { valorK: 0, valorM: 0 };
+  return { valorK: Number(vr.valorHora), valorM: Number(vr.valorHoraM) };
+}
+
+/***********************************************************
  * MESES CON RETROACTIVO (col M > 0 en TABLAS AUX)
  * Devuelve array de {value, label, valorM} para filtrar el select de meses
  ***********************************************************/
@@ -668,26 +675,36 @@ function registrarPedidoConsulta(fila) {
  * MÓDULO DEUDA MONOTRIBUTO
  * Escribe pedido en hoja "CCMA" de AUTOMATIZACION
  ***********************************************************/
-function registrarPedidoDeuda(fila) {
-  const sheetEx = _sheetExentos();
-  const row = sheetEx.getRange(fila, 1, 1, 3).getValues()[0];
-  // A=CLIENTE, B=CUIT, C=CLAVE AFIP
-
-  const ssAuto = SpreadsheetApp.openById(AUTOMATIZACION_SS_ID);
-  let sheet = ssAuto.getSheetByName('CCMA');
-  if (!sheet) {
-    sheet = ssAuto.insertSheet('CCMA');
-    sheet.getRange(1, 1, 1, 6).setValues([[
-      'CUIT', 'CLIENTE', 'CLAVE AFIP', 'FECHA PEDIDO', 'ESTADO', 'ENVIADO EMAIL'
-    ]]);
+function registrarPedidoDeuda(filaCliente) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let hojaCcma = ss.getSheetByName('CCMA');
+  if (!hojaCcma) {
+    hojaCcma = ss.insertSheet('CCMA');
+    hojaCcma.appendRow(['CUIT', 'CLIENTE', 'CLAVE AFIP', 'FECHA PEDIDO', 'ESTADO', 'EMAIL ENVIADO', 'EMAIL']);
   }
-  sheet.appendRow([
-    row[1],      // B = CUIT
-    row[0],      // A = CLIENTE
-    row[2],      // C = CLAVE AFIP
-    new Date(),  // FECHA PEDIDO
-    '',          // ESTADO — lo completa el script Python
-    ''           // ENVIADO EMAIL — lo completa el script Python
-  ]);
-  return 'ok';
+  
+  const sheetExentos = _getPlanillaExentosExterna();
+  const datosExentos = sheetExentos.getDataRange().getValues();
+  const r = filaCliente - 1; 
+  
+  const cuit = datosExentos[r][1];
+  const cliente = datosExentos[r][0];
+  const claveAfip = datosExentos[r][2];
+  const email = String(datosExentos[r][6] || '').trim();
+  
+  const fechaHoy = new Date();
+  
+  // LLAMADA EXCLUSIVA: Usamos tu función del archivo email para buscar el final real de los datos escritos
+  const siguienteFila = obtenerUltimaFilaReal(hojaCcma) + 1;
+  
+  // Escribimos exactamente en la fila vacía real consecutiva
+  hojaCcma.getRange(siguienteFila, 1, 1, 7).setValues([[
+    cuit,
+    cliente,
+    claveAfip,
+    fechaHoy,
+    'PROCESADO',
+    '',
+    email
+  ]]);
 }

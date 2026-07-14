@@ -108,7 +108,7 @@
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Pedido registrado. Te enviamos el resumen a la brevedad al email registrado.';
+          msg.textContent = '✅ Ni bien podamos, te enviaremos el detalle de la deuda del monotributo al email registrado.';
           btn.disabled = false;
         })
         .withFailureHandler(function(err) {
