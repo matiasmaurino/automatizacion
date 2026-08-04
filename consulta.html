@@ -28,7 +28,7 @@ button:hover {
 </head>
 <body>
   <h2>Consultar Clave Fiscal ARCA, ARBA y vencimiento de ALAS</h2>
-  <div class="sub">Ingresá tu DNI para solicitar tus claves y conocer cual es el vencimiento de tu exencion en Ingresos Brutos (ALAS). Te lo enviaremos a la brevedad al email registrado. Si por algun motivo queres que te lo enviemos a otro email, por favor escribinos por whatsapp para indicarnos tu nuevo email. </div>
+  <div class="sub">Ingresá tu DNI para solicitar tus claves y conocer cual es el vencimiento de tu exencion en Ingresos Brutos (ALAS). Te lo enviaremos a la brevedad al email registrado. Si por algun motivo queres que te lo enviemos a otro email, por favor escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para indicarnos tu nuevo email. </div>
 
   <label for="dni">DNI</label>
   <input type="text" id="dni" placeholder="Ej: 30123456" inputmode="numeric">
@@ -111,7 +111,7 @@ button:hover {
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Pedido registrado. No bien podamos te enviaremos tus claves y la fecha del vencimiento de la exencion de ingrsos brutos al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por whatsapp para que podamos darte una respuesta.';
+          msg.textContent = '✅ Pedido registrado. No bien podamos te enviaremos tus claves y la fecha del vencimiento de la exencion de ingresos brutos al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.';
           btn.style.display = 'none'
         })
         .withFailureHandler(function(err) {

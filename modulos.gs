@@ -180,7 +180,7 @@ function buscarPacientePorDni(filaCliente, dniPacienteInput) {
   const celdaJ = sheet.getRange(filaCliente, 10).getValue();
 
   if (!celdaI) {
-    throw new Error('No tenes pacientes cargados en nuestro sistema. Escribinos por whatsapp para que podamos darte una respuesta.');
+    throw new Error('No tenes pacientes cargados en nuestro sistema. Escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.');
   }
 
   const lineasI = String(celdaI).split('\n').filter(l => l.trim() !== '');
@@ -277,7 +277,7 @@ function listarServiciosCliente(filaCliente) {
   const celdaH = sheet.getRange(filaCliente, 8).getValue();
 
   if (!celdaH) {
-    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.');
+    throw new Error('Error, hace una captura de pantalla y escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.');
   }
 
   const servicios = String(celdaH)
@@ -286,7 +286,7 @@ function listarServiciosCliente(filaCliente) {
     .filter(s => s !== '');
 
   if (servicios.length === 0) {
-    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.');
+    throw new Error('Error, hace una captura de pantalla y escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.');
   }
 
   return servicios;
@@ -345,74 +345,7 @@ function _mesARango(mesNumero, anio) {
 /***********************************************************
  * GUARDAR FACTURA EN HOJA WEBAPP (VERSIÓN CORRECTA)
  ***********************************************************/
-function guardarFactura(payload) {
-  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); // 
-  
-  // 🟢 CORRECCIÓN: Si mesNumero es un texto (ej: "Julio"), lo usamos directamente en mayúsculas.
-  // Si es un número (ej: 7), lo traducimos usando el array MESES.
-  let mesNombre = '';
-  if (!isNaN(payload.mesNumero) && Number(payload.mesNumero) >= 1 && Number(payload.mesNumero) <= 12) {
-    mesNombre = MESES[Number(payload.mesNumero) - 1];
-  } else {
-    mesNombre = String(payload.mesNumero).toUpperCase().trim();
-  }
 
-  // Ahora el buscador va a recibir el mes perfecto en MAYÚSCULAS ("JULIO")
-  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); // 
-  if (!vr) {
-    throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta '); // [cite: 158]
-  }
-
-  // Si es retroactivo, el receptor siempre es IOMA
-  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; // [cite: 159]
-
-  let descripcion =
-    payload.servicio + ' ' +
-    payload.pacienteNombre + ' ' +
-    payload.numeroAfiliado + '/00 ' +
-    payload.estado + ' ' +
-    'DNI ' + payload.dniPaciente + ' ' +
-    'tramite ' + payload.numeroTramite + ' ' +
-    'segun resolucion ' + vr.resolucion + ' ' +
-    'del mes de ' + mesNombre + ' ' + payload.anio + ' ' +
-    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; // [cite: 160, 161]
-
-  if (payload.retroactivo) {
-    descripcion = 'RETROACTIVO de Factura Pto.Vta ' + payload.puntoVenta +
-      ' Nro ' + payload.nroComprobante + ' — ' + descripcion; // [cite: 161, 162]
-  }
-
-  const sheet = _sheetFacturar(); // [cite: 162]
-  sheet.appendRow([
-    payload.cuit,            // A
-    payload.claveAfip,       // B
-    payload.clienteNombre,   // C
-    rango.fechaFactura,      // D FECHA
-    'Factura C',             // E
-    rango.desde,             // F DESDE
-    rango.hasta,             // G HASTA
-    rango.fechaEmision,      // H VENCIMIENTO
-    cuitReceptorFinal,       // I
-    'Exento',                // J
-    descripcion,             // K
-    Number(payload.horas),   // L Cant
-    'otras unidades',        // M
-    vr.valorHora,            // N Prec
-    '',                      // O FACTURA (vacío, lo completa el script)
-    '',                      // P OPCION Y CREDENCIAL (vacío)
-    '',                      // Q CAE (vacío, lo completa el script)
-    payload.retroactivo ? 'SI' : '',   // R RETROACTIVO
-    payload.subimoAIoma ? 'SI' : ''    // S SUBIMOS A IOMA
-  ]);
-
-  return {
-    ok: true, // [cite: 165]
-    valorHora:  vr.valorHora, // [cite: 165]
-    valorHoraM: vr.valorHoraM, // [cite: 165]
-    resolucion: vr.resolucion, // [cite: 165]
-    descripcion: descripcion // [cite: 165]
-  };
-}
 /***********************************************************
  * MÓDULO OPCIÓN MONOTRIBUTO
  ***********************************************************/
@@ -451,7 +384,7 @@ function generarOpcionesVerificacion(filaCliente) {
   const lastRow = sheet.getLastRow();
 
   const nombreCorrecto = String(sheet.getRange(filaCliente, 1).getValue() || '').trim();
-  if (!nombreCorrecto) throw new Error('Error, hace una captura de pantalla y escribinos por whatsapp para que podamos darte una respuesta.');
+  if (!nombreCorrecto) throw new Error('Error, hace una captura de pantalla y escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.');
 
   const todosNombres = sheet.getRange(2, 1, lastRow - 1, 1).getValues()
     .map(r => String(r[0] || '').trim())
@@ -636,7 +569,7 @@ function enviarDatosPersonales(dniInput) {
     }
   }
 
-  if (!cliente) throw new Error('No encontramos tu DNI en nuestra base de datos. Escribinos por whatsapp para que podamos darte una respuesta');
+  if (!cliente) throw new Error('No encontramos tu DNI en nuestra base de datos. Escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta');
 
   // Guardar pedido en hoja DATOS PERSONALES
   const ssAuto = SpreadsheetApp.openById(AUTOMATIZACION_SS_ID);
@@ -707,4 +640,90 @@ function registrarPedidoDeuda(filaCliente) {
     '',
     email
   ]]);
+}
+
+function guardarFactura(payload) {
+  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); 
+  
+  let mesNombre = '';
+  if (!isNaN(payload.mesNumero) && Number(payload.mesNumero) >= 1 && Number(payload.mesNumero) <= 12) {
+    mesNombre = MESES[Number(payload.mesNumero) - 1];
+  } else {
+    mesNombre = String(payload.mesNumero).toUpperCase().trim();
+  }
+
+  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); 
+  if (!vr) {
+    throw new Error('Error, hace una captura de pantalla y escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.'); 
+  }
+
+  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; 
+
+  let descripcion =
+    payload.servicio + ' ' +
+    payload.pacienteNombre + ' ' +
+    payload.numeroAfiliado + '/00 ' +
+    payload.estado + ' ' +
+    'DNI ' + payload.dniPaciente + ' ' +
+    'tramite ' + payload.numeroTramite + ' ' +
+    'segun resolucion ' + vr.resolucion + ' ' +
+    'del mes de ' + mesNombre + ' ' + payload.anio + ' ' +
+    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; 
+
+  if (payload.retroactivo) {
+    descripcion = 'RETROACTIVO de Factura Pto.Vta ' + payload.puntoVenta +
+      ' Nro ' + payload.nroComprobante + ' — ' + descripcion; 
+  }
+
+  let emailCliente = payload.email || '';
+  if (!emailCliente && payload.cuit) {
+    try {
+      const sheetExentos = _getPlanillaExentosExterna();
+      const dataExentos = sheetExentos.getDataRange().getValues();
+      const cuitLimpioPayload = String(payload.cuit).replace(/\D/g, '');
+      
+      for (let r = 1; r < dataExentos.length; r++) {
+        const cuitExento = String(dataExentos[r][1]).replace(/\D/g, '');
+        if (cuitExento === cuitLimpioPayload) {
+          emailCliente = String(dataExentos[r][6] || '').trim();
+          break;
+        }
+      }
+    } catch (e) {
+      Logger.log("No se pudo autocompletar el email: " + e.toString());
+    }
+  }
+
+  const sheet = _sheetFacturar(); 
+  sheet.appendRow([
+    payload.cuit,
+    payload.claveAfip,
+    payload.clienteNombre,
+    rango.fechaFactura,
+    'Factura C',
+    rango.desde,
+    rango.hasta,
+    rango.fechaFactura,
+    cuitReceptorFinal,
+    'Exento',
+    descripcion,
+    Number(payload.horas),
+    '',
+    vr.valorHora,
+    '',
+    '',
+    '',
+    emailCliente,
+    '',
+    payload.retroactivo ? 'SI' : '',
+    payload.subimoAIoma ? 'SI' : ''
+  ]);
+
+  return {
+    ok: true, 
+    valorHora:  vr.valorHora, 
+    valorHoraM: vr.valorHoraM, 
+    resolucion: vr.resolucion, 
+    descripcion: descripcion 
+  };
 }

@@ -2,11 +2,11 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Estudio CB & MM')
   .addItem('Actualizar CUIT, CLAVES y EMAIL', 'actualizarCuitYClaves')
-    .addItem('🚀 ENVIAR TODO (1-Clic)', 'enviarTodo')
+  .addItem('Copiar WEBAPP → PEDIDOS PARA EXENTOS', 'copiarWebappATareas')
     .addSeparator()
-    .addItem('📧 Enviar Clientes (Datos Personales)', 'enviarCorreosClientes')
-    .addItem('📄 Enviar Facturas (Pestaña Facturar)', 'enviarFacturasFacturar')
-    .addItem('🌐 Enviar Facturas (Pestaña WEBAPP)', 'enviarFacturasWEBAPP')
+    .addItem('📧 Enviar Datos Personales', 'enviarCorreosClientes')
+    .addItem('📄 Enviar Facturas (Webapp)', 'enviarFacturasWEBAPP')
+    .addItem('Eliminar archivos enviados de Facturas', 'eliminarFacturasEnviadas')
     .addItem('Enviar Deuda CCMA', 'enviarFacturasCCMA')
     .addToUi();
 }

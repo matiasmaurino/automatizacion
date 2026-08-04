@@ -200,7 +200,7 @@
   <select id="selectTramite" style="display:none"></select>
   <input type="text" id="inputTramiteFijo" class="campo-fijo" disabled style="display:none">
   <p style="font-size:12px;color:#666;margin-top:6px;line-height:1.5">
-    Controlá que el número de trámite sea el correcto. Si no lo es o no figura ninguno, por favor escribinos por 
+    Controlá que el número de trámite sea el correcto, sino por favor escribinos por 
     <a href="https://wa.me/542215440900" target="_blank" style="color:#25D366;font-weight:bold">WhatsApp</a> 
     para enviarnos la nueva acta de IOMA.
   </p>
@@ -368,6 +368,7 @@
         estado.servicio = sel.value;
         sel.onchange = function() { estado.servicio = sel.value; actualizarValorHora(); };
       }                                          // ← cierra else
+      actualizarValorHora();                      // ← ahora que ya sabemos el servicio, recalculamos
     }).listarServiciosCliente(estado.cliente.fila);  // ← cierra withSuccessHandler
   }                                              // ← cierra cargarServiciosDinamicos
 
@@ -441,28 +442,13 @@
   }
 
   function cargarCuitsReceptorDinamicos() {
-    google.script.run.withSuccessHandler(function(lista) {
-      const sel = document.getElementById('selectCuitReceptor');
-      const inputFijo = document.getElementById('inputCuitFijo');
-      sel.innerHTML = '';
-
-      if (lista && lista.length === 1) {
-        sel.style.display = 'none';
-        inputFijo.style.display = 'block';
-        inputFijo.value = lista[0] === '30628249527' ? 'IOMA (30628249527)' : lista[0];
-        estado.cuitReceptor = lista[0];
-      } else {
-        inputFijo.style.display = 'none';
-        sel.style.display = 'block';
-        lista.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c;
-          opt.textContent = c === '30628249527' ? 'IOMA (30628249527)' : c;
-          sel.appendChild(opt);
-        });
-        estado.cuitReceptor = sel.value;
-      }
-    }).listarCuitsReceptor(estado.cliente.fila);
+    // En Facturación IOMA siempre se factura a IOMA, así que el campo queda fijo
+    const sel = document.getElementById('selectCuitReceptor');
+    const inputFijo = document.getElementById('inputCuitFijo');
+    sel.style.display = 'none';
+    inputFijo.style.display = 'block';
+    inputFijo.value = 'IOMA (30628249527)';
+    estado.cuitReceptor = '30628249527';
   }
 
   function toggleRetroactivo() {
@@ -633,7 +619,7 @@
         const valorM = res.valorHoraM || res.valorHora;
         const importe = (Number(valorM) * Number(estado.horas)).toLocaleString('es-AR');
         const email = estado.cliente.email || '';
-        const waLink = '<a href="https://wa.me/542215440900" target="_blank" style="color:#25D366;font-weight:bold">WhatsApp</a>';
+        const waLink = '<a href="https://wa.me/542215440900" target="_blank" style="color:#25D366;">WhatsApp</a>';
         let mensaje;
         if (email) {
           mensaje = '¡Listo, tomamos nota de tu pedido y te vamos a enviar la factura a <strong>' + email + '</strong>. ' +

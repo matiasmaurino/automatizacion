@@ -1,6 +1,6 @@
 function eliminarFacturasEnviadas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let hoja = ss.getSheetByName('Facturar') || ss.getSheetByName('WEBAPP') || ss.getActiveSheet();
+  let hoja = ss.getSheetByName('WEBAPP');
   
   Logger.log(`--- INICIANDO BÚSQUEDA POR CUIT ---`);
   
