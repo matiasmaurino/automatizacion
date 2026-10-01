@@ -616,7 +616,7 @@
     };
     google.script.run
       .withSuccessHandler(function(res) {
-        const valorM = res.valorHoraM || res.valorHora;
+        const valorM = estado.retroactivo ? (res.valorHoraM || res.valorHora) : res.valorHora;
         const importe = (Number(valorM) * Number(estado.horas)).toLocaleString('es-AR');
         const email = estado.cliente.email || '';
         const waLink = '<a href="https://wa.me/542215440900" target="_blank" style="color:#25D366;">WhatsApp</a>';

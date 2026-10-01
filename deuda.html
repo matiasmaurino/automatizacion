@@ -96,7 +96,7 @@
       document.getElementById('rCuit').textContent = r.cuit;
       document.getElementById('rEmail').textContent = r.email || '(sin email registrado)';
       document.getElementById('resultado').style.display = 'block';
-      document.getElementById('msgGuardar').textContent = '';
+      document.getElementById('msgGuardar').innerHTML = '';
     }
 
     function guardar() {
@@ -110,7 +110,7 @@
       google.script.run
         .withSuccessHandler(function() {
           msg.className = 'ok';
-          msg.textContent = '✅ Pedido registrado. No bien podamos te enviaremos el detalle de la deuda del monotributo al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.';
+          msg.innerHTML = '✅ Pedido registrado. No bien podamos te enviaremos el detalle de la deuda del monotributo al email que figura registrado. Si qusieras que te la enviemos a otro email, escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366 !important; font-weight: bold; text-decoration: underline;";">WhatsApp</a> para que podamos darte una respuesta.';
           btn.style.display = 'none';
         })
         .withFailureHandler(function(err) {

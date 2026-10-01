@@ -180,7 +180,7 @@ function buscarPacientePorDni(filaCliente, dniPacienteInput) {
   const celdaJ = sheet.getRange(filaCliente, 10).getValue();
 
   if (!celdaI) {
-    throw new Error('No tenes pacientes cargados en nuestro sistema. Escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.');
+    throw new Error('No tenés pacientes cargados en nuestro sistema. Escribinos por WhatsApp para que podamos darte una respuesta.');
   }
 
   const lineasI = String(celdaI).split('\n').filter(l => l.trim() !== '');
@@ -668,7 +668,7 @@ function guardarFactura(payload) {
     'tramite ' + payload.numeroTramite + ' ' +
     'segun resolucion ' + vr.resolucion + ' ' +
     'del mes de ' + mesNombre + ' ' + payload.anio + ' ' +
-    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; 
+    'por ' + payload.horas + ' horas a un valor de $' + (payload.retroactivo ? vr.valorHoraM : vr.valorHora);
 
   if (payload.retroactivo) {
     descripcion = 'RETROACTIVO de Factura Pto.Vta ' + payload.puntoVenta +
@@ -709,7 +709,7 @@ function guardarFactura(payload) {
     descripcion,
     Number(payload.horas),
     '',
-    vr.valorHora,
+        payload.retroactivo ? vr.valorHoraM : vr.valorHora,
     '',
     '',
     '',
