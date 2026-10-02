@@ -6,8 +6,7 @@ function onOpen() {
   .addItem('Registrar los CAE ya generados', 'completarNombresArchivos')
     .addSeparator()
     .addItem('📧 Enviar Datos Personales', 'enviarCorreosClientes')
-    .addItem('📄 Enviar Facturas (Webapp)', 'enviarFacturasWEBAPP')
-    .addItem('Eliminar archivos enviados de Facturas', 'eliminarFacturasEnviadas')
+    .addItem('📄 Enviar Archivos en la carpeta Facturas (por CUIT)', 'enviarFacturasPorCuit')
     .addItem('Enviar Deuda CCMA', 'enviarFacturasCCMA')
     
     .addToUi();

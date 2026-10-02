@@ -114,295 +114,228 @@ function enviarCorreosClientes() {
   });
   
   SpreadsheetApp.getActiveSpreadsheet().toast('Proceso de envío de correos finalizado.', 'Éxito', 5);
-
-  // --- EJECUCIÓN DE ELIMINACIÓN DE ARCHIVOS ---
-  try {
-    eliminarFacturasEnviadas();
-  } catch (error) {
-    Logger.log("Error al intentar eliminar archivos: " + error.toString());
-  }
 }
 
 // =========================================================================
-// 2. ENVÍO DE FACTURAS (PESTAÑA FACTURAR)
+// 2. ENVÍO DE FACTURAS POR CUIT (basado en archivos de Drive + hoja "CUIT y CLAVES")
+//
+// Reemplaza a las antiguas enviarFacturasFacturar() / enviarFacturasWEBAPP():
+// en vez de depender de las columnas EMAIL/ESTADO ENVÍO de las hojas "Facturar"
+// o "WEBAPP" (fuente de varios bugs de desalineación de columnas), trabaja
+// directo sobre los archivos de la carpeta de Drive y los cruza por CUIT
+// contra la hoja "CUIT y CLAVES". Sirve para CUALQUIER archivo que esté en
+// FACTURAS, sin importar de qué proceso haya salido.
+//
+// Lógica:
+// 1. Lee "CUIT y CLAVES" y arma un mapa CUIT(col B) -> {nombre(col A), email(col D)}
+// 2. Recorre los archivos de la carpeta de Drive (FACTURAS)
+// 3. Para cada archivo, busca qué CUIT conocido aparece al inicio del nombre
+// 4. Agrupa los archivos por EMAIL (un email puede recibir archivos de varios CUIT)
+// 5. Envía un mail por cada email con todos sus archivos adjuntos
+// 6. Si el envío fue exitoso, mueve esos archivos a la carpeta "ENVIADO"
+//    (subcarpeta de FACTURAS) para no reenviarlos en la próxima corrida
+// 7. Los archivos con CUIT no registrado, o con CUIT registrado pero sin
+//    email cargado, se listan en un alert al final en vez de saltearse
+//    en silencio
 // =========================================================================
-function enviarFacturasFacturar() {
+function enviarFacturasPorCuit() {
+  const ID_CARPETA_DRIVE = '1cLnlPOvel1V7q-Syegm0KGWNd0F4a_Ws';
+  const ID_CARPETA_ENVIADOS = '1gLvuWNZfeZa-QtrPrRGgONQcbe2kx4Fl'; // "ENVIADO", dentro de FACTURAS
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let hoja = ss.getSheetByName('Facturar');
-  
-  if (!hoja) {
-    SpreadsheetApp.getUi().alert('❌ Error: No se encontró la pestaña llamada "Facturar".');
+  const hojaCuitClaves = ss.getSheetByName('CUIT y CLAVES');
+
+  if (!hojaCuitClaves) {
+    SpreadsheetApp.getUi().alert('❌ Error: No se encontró la pestaña "CUIT y CLAVES".');
     return;
   }
-  
-  const ultimaFila = obtenerUltimaFilaReal(hoja);
-  if (ultimaFila <= 1) {
-    SpreadsheetApp.getUi().alert('La hoja "Facturar" está vacía o solo contiene los encabezados.');
-    return;
-  }
-  
-  // Revisamos TODAS las filas con datos (desde la fila 2 hasta la última),
-  // para no dejar afuera pendientes más viejos que las últimas N filas.
-  const filaInicio = 2;
-  const filasALeer = ultimaFila - filaInicio + 1;
 
-  const rango = hoja.getRange(filaInicio, 1, filasALeer, 21);
-  const datos = rango.getValues();
-  
-  let gruposPorEmail = {};
+  // 1. PASO: Mapa CUIT -> {nombre, email} a partir de las columnas A, B y D.
+  //    Guardamos TODOS los CUIT válidos, tengan o no email cargado, para poder
+  //    distinguir "CUIT no registrado" de "CUIT registrado pero sin email".
+  const datosCuitClaves = hojaCuitClaves.getDataRange().getValues();
+  const mapaCuitInfo = {};
 
-  // 1. PASO: Agrupamos las filas por dirección de correo electrónico
-  for (let i = datos.length - 1; i >= 0; i--) {
-    const fila = datos[i];
-    const numeroFilaReal = filaInicio + i; 
-    
-    const cuitCliente = String(fila[0]).trim();    // Columna A (CUIT)
-    const emailDestino = String(fila[17]).trim();  // Columna R (EMAIL) [Índice 17]
-    const estadoEnvio = String(fila[18]).trim();    // Columna S (ESTADO ENVÍO) [Índice 18]
-    
-    if (emailDestino && emailDestino.indexOf('@') !== -1 && estadoEnvio !== "Email enviado") {
-      if (!gruposPorEmail[emailDestino]) {
-        gruposPorEmail[emailDestino] = {
-          clienteNombre: fila[2] || 'Cliente', // Columna C (Cliente)
-          cuit: cuitCliente,
-          renglones: []
-        };
-      }
-      
-      gruposPorEmail[emailDestino].renglones.push({
-        filaHoja: numeroFilaReal,
-        facturaTexto: fila[4] 
-      });
+  for (let r = 0; r < datosCuitClaves.length; r++) {
+    const nombre = String(datosCuitClaves[r][0] || '').trim();              // Columna A
+    const cuit   = String(datosCuitClaves[r][1] || '').replace(/\D/g, '');  // Columna B
+    const email  = String(datosCuitClaves[r][3] || '').trim();              // Columna D
+
+    if (cuit.length >= 10) {
+      mapaCuitInfo[cuit] = {
+        nombre: nombre,
+        email: (email && email.indexOf('@') !== -1) ? email : ''
+      };
     }
   }
 
-  const listaEmails = Object.keys(gruposPorEmail);
-  if (listaEmails.length === 0) {
-    SpreadsheetApp.getUi().alert('No se encontraron facturas pendientes de envío en la pestaña "Facturar".');
+  const cuitsConocidos = Object.keys(mapaCuitInfo);
+  if (cuitsConocidos.length === 0) {
+    SpreadsheetApp.getUi().alert('No se encontraron CUIT cargados en "CUIT y CLAVES".');
     return;
   }
 
-  const ID_CARPETA_DRIVE = '1cLnlPOvel1V7q-Syegm0KGWNd0F4a_Ws';
   let carpeta;
   try {
     carpeta = DriveApp.getFolderById(ID_CARPETA_DRIVE);
-  } catch(e) {
+  } catch (e) {
     SpreadsheetApp.getUi().alert('❌ Error: No se pudo acceder a la carpeta de Google Drive. Verificá el ID.');
     return;
   }
 
-  let correosEnviadosContador = 0;
+  let carpetaEnviados;
+  try {
+    carpetaEnviados = DriveApp.getFolderById(ID_CARPETA_ENVIADOS);
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('❌ Error: No se pudo acceder a la carpeta "ENVIADO". Verificá el ID.');
+    return;
+  }
 
-  // 2. PASO: Procesar cada cliente, buscar sus archivos en Drive y enviarlos
-  for (let email in gruposPorEmail) {
-    const infoCliente = gruposPorEmail[email];
-    const cuitBuscar = infoCliente.cuit;
-    
-    if (!cuitBuscar) continue;
+  // 2. PASO: Recorremos los archivos de la carpeta UNA sola vez y los agrupamos por email.
+  //    Los que no se puedan agrupar (CUIT desconocido o CUIT sin email) se listan aparte
+  //    para avisar al final, en vez de saltearlos en silencio.
+  let gruposPorEmail = {};
+  let archivosSinCuitRegistrado = [];
+  let archivosSinEmail = []; // { archivo: nombreArchivo, cuit, cliente }
 
-    let adjuntos = [];
-    let nombresArchivos = []; // Guardará los nombres de los adjuntos para el registro
+  const archivos = carpeta.getFiles();
+  while (archivos.hasNext()) {
+    const archivo = archivos.next();
+    const nombreArchivo = archivo.getName();
 
-    const archivos = carpeta.getFiles();
-    while (archivos.hasNext()) {
-      const archivo = archivos.next();
-      const nombreArchivo = archivo.getName();
-      
-      if (nombreArchivo.indexOf(cuitBuscar) === 0) {
-        adjuntos.push(archivo.getAs(MimeType.PDF));
-        nombresArchivos.push(nombreArchivo);
-      }
+    // Buscamos cuál CUIT conocido aparece al inicio del nombre del archivo
+    const cuitEncontrado = cuitsConocidos.find(function (cuit) {
+      return nombreArchivo.indexOf(cuit) === 0;
+    });
+
+    if (!cuitEncontrado) {
+      archivosSinCuitRegistrado.push(nombreArchivo);
+      continue;
     }
 
-    if (adjuntos.length === 0) {
-      Logger.log("Fila omitida para " + infoCliente.clienteNombre + " en Facturar: Sin archivos.");
-      infoCliente.renglones.forEach(function(renglon) {
-        hoja.getRange(renglon.filaHoja, 19).setValue("Sin archivos en Facturas"); 
+    const info = mapaCuitInfo[cuitEncontrado];
+
+    if (!info.email) {
+      archivosSinEmail.push({
+        archivo: nombreArchivo,
+        cuit: cuitEncontrado,
+        cliente: info.nombre || '(sin nombre)'
       });
       continue;
     }
 
-    const asunto = "Envío FACTURA - Estudio Contable CB & MM";
-    let cuerpo = "Estimado/a " + infoCliente.clienteNombre + ",\n\n" +
-                 "Te enviamos la/s factura/s, Opción Monotributo y/o Credencial de Pago.\n\n" +
-                 "Estudio Contable CB & MM\n" +
-                 "Contadores Publicos\n" +
-                 "Celular/Whatsapp 221.544.0900\n" +
-                 "estudiocontablecbmm@gmail.com";
+    const emailKey = info.email.toLowerCase(); // normalizado para no separar por mayúsculas
 
-    try {
-      MailApp.sendEmail({
-        to: email,
-        subject: asunto,
-        body: cuerpo,
-        attachments: adjuntos
-      });
-      
-      correosEnviadosContador++;
-      
-      // Marcar "Email enviado" en la columna S (columna 19)
-      infoCliente.renglones.forEach(function(renglon) {
-        hoja.getRange(renglon.filaHoja, 19).setValue("Email enviado"); 
-      });
-
-      // --- REGISTRO EN HOJA "ENVIO DE EMAIL" ---
-      registrarEnvioEmail(infoCliente.clienteNombre, nombresArchivos);
-      
-      Utilities.sleep(500); 
-
-    } catch (error) {
-      Logger.log("Error al enviar correo a " + email + ": " + error.toString());
+    if (!gruposPorEmail[emailKey]) {
+      gruposPorEmail[emailKey] = {
+        clienteNombre: info.nombre || 'Cliente',
+        archivosDrive: [],   // objetos File de Drive (para poder moverlos después)
+        adjuntos: [],        // Blobs PDF para el mail
+        nombresArchivos: []  // nombres para el registro en ENVIO DE EMAIL
+      };
     }
-  }
 
-  SpreadsheetApp.getActiveSpreadsheet().toast(
-    "¡Listo! Se procesaron y enviaron correos con sus respectivos PDF adjuntos a " + correosEnviadosContador + " clientes de Facturar.", 
-    "Envío Facturar Finalizado", 
-    5
-  );
-}
-
-// =========================================================================
-// 3. ENVÍO DE FACTURAS (PESTAÑA WEBAPP)
-// =========================================================================
-function enviarFacturasWEBAPP() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let hoja = ss.getSheetByName('WEBAPP');
-  
-  if (!hoja) {
-    SpreadsheetApp.getUi().alert('❌ Error: No se encontró la pestaña llamada "WEBAPP".');
-    return;
-  }
-  
-  const ultimaFila = obtenerUltimaFilaReal(hoja);
-  if (ultimaFila <= 1) {
-    SpreadsheetApp.getUi().alert('La hoja "WEBAPP" está vacía o solo contiene los encabezados.');
-    return;
-  }
-  
-  // Revisamos TODAS las filas con datos (desde la fila 2 hasta la última),
-  // para no dejar afuera pendientes más viejos que las últimas N filas.
-  const filaInicio = 2;
-  const filasALeer = ultimaFila - filaInicio + 1;
-
-  const rango = hoja.getRange(filaInicio, 1, filasALeer, 21);
-  const datos = rango.getValues();
-  
-  let gruposPorEmail = {};
-
-  // 1. PASO: Agrupamos las filas por dirección de correo electrónico
-  for (let i = datos.length - 1; i >= 0; i--) {
-    const fila = datos[i];
-    const numeroFilaReal = filaInicio + i; 
-    
-    const cuitCliente = String(fila[0]).trim();    // Columna A (CUIT)
-    const emailDestino = String(fila[17]).trim();  // Columna R (EMAIL) [Índice 17]
-    const estadoEnvio = String(fila[18]).trim();    // Columna S (ESTADO ENVÍO) [Índice 18]
-    
-    if (emailDestino && emailDestino.indexOf('@') !== -1 && estadoEnvio !== "Email enviado") {
-      if (!gruposPorEmail[emailDestino]) {
-        gruposPorEmail[emailDestino] = {
-          clienteNombre: fila[2] || 'Cliente', // Columna C (Cliente)
-          cuit: cuitCliente,
-          renglones: []
-        };
-      }
-      
-      gruposPorEmail[emailDestino].renglones.push({
-        filaHoja: numeroFilaReal,
-        facturaTexto: fila[4] 
-      });
-    }
+    gruposPorEmail[emailKey].archivosDrive.push(archivo);
+    gruposPorEmail[emailKey].adjuntos.push(archivo.getAs(MimeType.PDF));
+    gruposPorEmail[emailKey].nombresArchivos.push(nombreArchivo);
   }
 
   const listaEmails = Object.keys(gruposPorEmail);
+  if (listaEmails.length === 0 && archivosSinCuitRegistrado.length === 0 && archivosSinEmail.length === 0) {
+    SpreadsheetApp.getUi().alert('No se encontraron archivos en la carpeta.');
+    return;
+  }
   if (listaEmails.length === 0) {
-    SpreadsheetApp.getUi().alert('No se encontraron facturas pendientes de envío en la pestaña "WEBAPP".');
+    SpreadsheetApp.getUi().alert(
+      'No se pudo enviar ningún archivo.\n\n' +
+      (archivosSinCuitRegistrado.length > 0
+        ? archivosSinCuitRegistrado.length + ' archivo(s) con CUIT no registrado en "CUIT y CLAVES":\n' + archivosSinCuitRegistrado.join('\n') + '\n\n'
+        : '') +
+      (archivosSinEmail.length > 0
+        ? archivosSinEmail.length + ' archivo(s) con CUIT registrado pero sin email cargado:\n' +
+          archivosSinEmail.map(function (a) { return a.archivo + ' (CUIT ' + a.cuit + ' — ' + a.cliente + ')'; }).join('\n')
+        : '')
+    );
     return;
   }
 
-  const ID_CARPETA_DRIVE = '1cLnlPOvel1V7q-Syegm0KGWNd0F4a_Ws';
-  let carpeta;
-  try {
-    carpeta = DriveApp.getFolderById(ID_CARPETA_DRIVE);
-  } catch(e) {
-    SpreadsheetApp.getUi().alert('❌ Error: No se pudo acceder a la carpeta de Google Drive. Verificá el ID.');
-    return;
-  }
-
+  // 3. PASO: Enviar un mail por cada email, con todos sus archivos adjuntos
   let correosEnviadosContador = 0;
 
-  // 2. PASO: Procesar cada cliente, buscar sus archivos en Drive y enviarlos
   for (let email in gruposPorEmail) {
-    const infoCliente = gruposPorEmail[email];
-    const cuitBuscar = infoCliente.cuit;
-    
-    if (!cuitBuscar) continue;
-
-    let adjuntos = [];
-    let nombresArchivos = []; // Guardará los nombres de los adjuntos para el registro
-
-    const archivos = carpeta.getFiles();
-    while (archivos.hasNext()) {
-      const archivo = archivos.next();
-      const nombreArchivo = archivo.getName();
-      
-      if (nombreArchivo.indexOf(cuitBuscar) === 0) {
-        adjuntos.push(archivo.getAs(MimeType.PDF));
-        nombresArchivos.push(nombreArchivo);
-      }
-    }
-
-    if (adjuntos.length === 0) {
-      Logger.log("Fila omitida para " + infoCliente.clienteNombre + " en WEBAPP: Sin archivos.");
-      infoCliente.renglones.forEach(function(renglon) {
-        hoja.getRange(renglon.filaHoja, 19).setValue("Sin archivos en Facturas"); 
-      });
-      continue;
-    }
+    const info = gruposPorEmail[email];
 
     const asunto = "Envío FACTURA, CAE y OPCION - Estudio Contable CB & MM";
-    let cuerpo = "Estimado/a " + infoCliente.clienteNombre + ",\n\n" +
-                 "Te enviamos la/s factura/s, Opción Monotributo y/o Credencial de Pago.\n\n" +
-                 "Estudio Contable CB & MM\n" +
-                 "Contadores Publicos\n" +
-                 "Celular/Whatsapp 221.544.0900\n" +
-                 "estudiocontablecbmm@gmail.com";
+    const cuerpo = "Estimado/a " + info.clienteNombre + ",\n\n" +
+                   "Te enviamos la/s factura/s, Opción Monotributo y/o Credencial de Pago.\n\n" +
+                   "Estudio Contable CB & MM\n" +
+                   "Contadores Publicos\n" +
+                   "Celular/Whatsapp 221.544.0900\n" +
+                   "estudiocontablecbmm@gmail.com";
 
     try {
       MailApp.sendEmail({
         to: email,
         subject: asunto,
         body: cuerpo,
-        attachments: adjuntos
-      });
-      
-      correosEnviadosContador++;
-      
-      // Marcar "Email enviado" en la columna S (columna 19)
-      infoCliente.renglones.forEach(function(renglon) {
-        hoja.getRange(renglon.filaHoja, 19).setValue("Email enviado"); 
+        attachments: info.adjuntos
       });
 
+      correosEnviadosContador++;
+
       // --- REGISTRO EN HOJA "ENVIO DE EMAIL" ---
-      registrarEnvioEmail(infoCliente.clienteNombre, nombresArchivos);
-      
-      Utilities.sleep(500); 
+      registrarEnvioEmail(info.clienteNombre, info.nombresArchivos);
+
+      // --- MOVEMOS LOS ARCHIVOS YA ENVIADOS A "ENVIADO" PARA NO REPETIRLOS LA PRÓXIMA VEZ ---
+      info.archivosDrive.forEach(function (archivoDrive) {
+        try {
+          archivoDrive.moveTo(carpetaEnviados);
+        } catch (errorMover) {
+          // Fallback por si moveTo no está disponible o no somos dueños del archivo:
+          // lo agregamos a ENVIADO y lo sacamos de la carpeta de origen a mano.
+          try {
+            carpetaEnviados.addFile(archivoDrive);
+            carpeta.removeFile(archivoDrive);
+          } catch (errorFallback) {
+            Logger.log('No se pudo mover el archivo ' + archivoDrive.getName() + ': ' + errorFallback.toString());
+          }
+        }
+      });
+
+      Utilities.sleep(500);
 
     } catch (error) {
       Logger.log("Error al enviar correo a " + email + ": " + error.toString());
+      // Si falló el envío, NO movemos los archivos: quedan en FACTURAS para reintentar en la próxima corrida
     }
   }
 
   SpreadsheetApp.getActiveSpreadsheet().toast(
-    "¡Listo! Se procesaron y enviaron correos con sus respectivos PDF adjuntos a " + correosEnviadosContador + " clientes de WEBAPP.", 
-    "Envío WEBAPP Finalizado", 
+    "¡Listo! Se enviaron correos a " + correosEnviadosContador + " clientes según los archivos de Drive.",
+    "Envío por CUIT Finalizado",
     5
   );
+
+  // Si quedaron archivos sin poder procesarse, lo mostramos en un alert aparte
+  // (el toast desaparece solo y se puede pasar por alto; esto requiere un click).
+  if (archivosSinCuitRegistrado.length > 0 || archivosSinEmail.length > 0) {
+    let mensajePendientes = 'Se enviaron ' + correosEnviadosContador + ' correos, pero quedaron archivos sin procesar en FACTURAS:\n\n';
+
+    if (archivosSinCuitRegistrado.length > 0) {
+      mensajePendientes += archivosSinCuitRegistrado.length + ' archivo(s) con CUIT no registrado en "CUIT y CLAVES":\n' +
+        archivosSinCuitRegistrado.join('\n') + '\n\n';
+    }
+
+    if (archivosSinEmail.length > 0) {
+      mensajePendientes += archivosSinEmail.length + ' archivo(s) con CUIT registrado pero sin email cargado:\n' +
+        archivosSinEmail.map(function (a) { return a.archivo + ' (CUIT ' + a.cuit + ' — ' + a.cliente + ')'; }).join('\n');
+    }
+
+    SpreadsheetApp.getUi().alert(mensajePendientes);
+  }
 }
 
 // =========================================================================
-// 4. FUNCIONES AUXILIARES Y GUARDADO
+// 3. FUNCIONES AUXILIARES Y GUARDADO
 // =========================================================================
 function obtenerUltimaFilaReal(hoja) {
   const valores = hoja.getRange("A:A").getValues();
@@ -412,4 +345,90 @@ function obtenerUltimaFilaReal(hoja) {
     }
   }
   return 1;
+}
+
+function guardarFactura(payload) {
+  const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); 
+  
+  let mesNombre = '';
+  if (!isNaN(payload.mesNumero) && Number(payload.mesNumero) >= 1 && Number(payload.mesNumero) <= 12) {
+    mesNombre = MESES[Number(payload.mesNumero) - 1];
+  } else {
+    mesNombre = String(payload.mesNumero).toUpperCase().trim();
+  }
+
+  const vr = _getValorYResolucion(payload.servicio, mesNombre, payload.anio); 
+  if (!vr) {
+    throw new Error('Error, hace una captura de pantalla y escribinos por <a href="https://wa.me/542215440900" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">WhatsApp</a> para que podamos darte una respuesta.'); 
+  }
+
+  const cuitReceptorFinal = payload.retroactivo ? CUIT_IOMA : payload.cuitReceptor; 
+
+  let descripcion =
+    payload.servicio + ' ' +
+    payload.pacienteNombre + ' ' +
+    payload.numeroAfiliado + '/00 ' +
+    payload.estado + ' ' +
+    'DNI ' + payload.dniPaciente + ' ' +
+    'tramite ' + payload.numeroTramite + ' ' +
+    'segun resolucion ' + vr.resolucion + ' ' +
+    'del mes de ' + mesNombre + ' ' + payload.anio + ' ' +
+    'por ' + payload.horas + ' horas a un valor de $' + vr.valorHora; 
+
+  if (payload.retroactivo) {
+    descripcion = 'RETROACTIVO de Factura Pto.Vta ' + payload.puntoVenta +
+      ' Nro ' + payload.nroComprobante + ' — ' + descripcion; 
+  }
+
+  let emailCliente = payload.email || '';
+  if (!emailCliente && payload.cuit) {
+    try {
+      const sheetExentos = _getPlanillaExentosExterna();
+      const dataExentos = sheetExentos.getDataRange().getValues();
+      const cuitLimpioPayload = String(payload.cuit).replace(/\D/g, '');
+      
+      for (let r = 1; r < dataExentos.length; r++) {
+        const cuitExento = String(dataExentos[r][1]).replace(/\D/g, '');
+        if (cuitExento === cuitLimpioPayload) {
+          emailCliente = String(dataExentos[r][6] || '').trim();
+          break;
+        }
+      }
+    } catch (e) {
+      Logger.log("No se pudo autocompletar el email: " + e.toString());
+    }
+  }
+
+  const sheet = _sheetFacturar(); 
+  sheet.appendRow([
+    payload.cuit,
+    payload.claveAfip,
+    payload.clienteNombre,
+    rango.fechaFactura,
+    'Factura C',
+    rango.desde,
+    rango.hasta,
+    rango.fechaEmision,
+    cuitReceptorFinal,
+    'Exento',
+    descripcion,
+    Number(payload.horas),
+    'otras unidades',
+    vr.valorHora,
+    '',
+    '',
+    '',
+    emailCliente,
+    '',
+    payload.retroactivo ? 'SI' : '',
+    payload.subimoAIoma ? 'SI' : ''
+  ]);
+
+  return {
+    ok: true, 
+    valorHora:  vr.valorHora, 
+    valorHoraM: vr.valorHoraM, 
+    resolucion: vr.resolucion, 
+    descripcion: descripcion 
+  };
 }
