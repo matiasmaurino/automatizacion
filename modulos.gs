@@ -703,7 +703,7 @@ function guardarFactura(payload) {
     'Factura C',
     rango.desde,
     rango.hasta,
-    rango.fechaFactura,
+    null,
     cuitReceptorFinal,
     'Exento',
     descripcion,

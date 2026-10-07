@@ -79,7 +79,7 @@ function guardarFacturaNoIoma(payload) {
     'Factura C',                               // E
     rango.desde,                               // F DESDE
     rango.hasta,                               // G HASTA
-    rango.fechaFactura,                        // H VENCIMIENTO
+    null,                        // H VENCIMIENTO
     payload.cuitReceptor,                      // I
     obtenerCondicionIva(payload.cuitReceptor), // J — condición IVA del receptor
     descripcion,                               // K
