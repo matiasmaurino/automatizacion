@@ -641,6 +641,7 @@ function registrarPedidoDeuda(filaCliente) {
     email
   ]]);
 }
+  // Esta formula es para retroactivo
 
 function guardarFactura(payload) {
   const rango = _mesARango(Number(payload.mesNumero), Number(payload.anio)); 
